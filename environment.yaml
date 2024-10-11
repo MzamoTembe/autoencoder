@@ -1,0 +1,19 @@
+name: autoencoder
+channels:
+  - pytorch
+  - conda-forge
+  - nvidia
+  - defaults
+dependencies:
+  - pillow
+  - scikit-learn
+  - scipy
+  - python=3.12
+  - numpy
+  - biopython
+  - matplotlib
+  - pytorch-cuda
+  - pytorch
+  - umap-learn
+  - pandas
+prefix: /home/25543350/anaconda3/envs/autoencoder
