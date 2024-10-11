@@ -7,7 +7,7 @@ __pycache__/
 *.so
 
 # Weird windows stuff
-desktop.ini
+**/desktop.ini
 
 # Distribution / packaging
 .Python
