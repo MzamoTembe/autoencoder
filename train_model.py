@@ -3,13 +3,17 @@ import argparse
 import pathlib
 import torch
 import numpy as np
-from torch.utils.data import DataLoader, Dataset, random_split
+from torch import nn
+from torch.utils.data import DataLoader, Dataset, Subset
+from sklearn.preprocessing import StandardScaler
 from autoencoder import Autoencoder
 from visualiser import Visualiser
-from constants import AMINO_ACID_INDICES
+from constants import AMINO_ACID_INDICES, STANDARD_AMINO_ACIDS
+from collections import Counter
 
 logging.basicConfig(level=logging.INFO, format='%(message)s')
 logger = logging.getLogger(__name__)
+
 
 class Features:
     def __init__(self, translations, rotations, torsional_angles):
@@ -23,12 +27,14 @@ class Features:
         torsional_angles_flat = self.torsional_angles.view(self.torsional_angles.size(0), -1)
         return torch.cat([translations_flat, rotations_flat, torsional_angles_flat], dim=1)
 
+
 class Residue:
     def __init__(self, features, label, chain_id, sequence_position):
         self.features = features
         self.label = label
         self.chain_id = chain_id
         self.sequence_position = sequence_position
+
 
 class Chain:
     def __init__(self, chain_id, feature_data):
@@ -37,7 +43,7 @@ class Chain:
         self.features = Features(
             translations=feature_data['translations'],
             rotations=feature_data['rotations'],
-            torsional_angles=feature_data['torsional_angles']
+            torsional_angles=feature_data['torsional_angles'],
         )
 
     def get_valid_residues(self):
@@ -49,10 +55,11 @@ class Chain:
                 features=feature_vectors[i],
                 label=labels[i].item(),
                 chain_id=self.chain_id,
-                sequence_position=i
+                sequence_position=i,
             )
             for i in range(len(labels))
         ]
+
 
 class StructureDataset(Dataset):
     def __init__(self, feature_directory, chain_list_file, test_chain_list=None, seed=None):
@@ -68,6 +75,7 @@ class StructureDataset(Dataset):
         self.chains = []
         self.chain_shapes = {}
         self._load_and_process_chains()
+        self._normalize_features()
 
     def _load_chain_ids(self, chain_list_file):
         with open(chain_list_file, 'r') as file:
@@ -92,18 +100,40 @@ class StructureDataset(Dataset):
             chain_data = self._load_chain_features(chain_id)
             self._process_chain(chain_id, chain_data)
 
+    def _normalize_features(self):
+        all_features = torch.stack([residue.features for residue in self.residues])
+        self.scaler = StandardScaler()
+        normalized_features = self.scaler.fit_transform(all_features)
+        for i, residue in enumerate(self.residues):
+            residue.features = torch.tensor(normalized_features[i], dtype=torch.float32)
+
     def __len__(self):
         return len(self.residues)
 
     def __getitem__(self, idx):
-        residue = self.residues[idx]
-        return residue.features, residue
+        return self.residues[idx]
+
 
 class AutoencoderTrainer:
-    def __init__(self, input_directory, chain_list_file, test_chain_list, output_directory,
-                 layers, latent_dim, dropout, batch_size, learning_rate,
-                 epochs, device, balanced_sampling=False, seed=None,
-                 negative_slope=0.01, save_val_features=False, train_val_split=0.8):
+    def __init__(
+        self,
+        input_directory,
+        chain_list_file,
+        test_chain_list,
+        output_directory,
+        layers,
+        latent_dim,
+        dropout,
+        batch_size,
+        learning_rate,
+        epochs,
+        device,
+        balanced_sampling=False,
+        seed=None,
+        negative_slope=0.01,
+        save_val_features=False,
+        train_val_split=0.8,
+    ):
         self.input_directory = pathlib.Path(input_directory)
         self.output_directory = pathlib.Path(output_directory)
         self.layers = layers
@@ -118,25 +148,28 @@ class AutoencoderTrainer:
         self.negative_slope = negative_slope
         self.save_val_features = save_val_features
         self.train_val_split = train_val_split
+        self.random_number_generator = np.random.default_rng(seed=seed)
 
         self.output_directory.mkdir(parents=True, exist_ok=True)
         self.dataset = StructureDataset(self.input_directory, chain_list_file, test_chain_list, seed=self.seed)
-
-        if self.balanced_sampling:
-            self._apply_balanced_sampling()
+        self.dataset_size = len(self.dataset)
+        self.sample_space = np.arange(self.dataset_size)
 
         self.train_loader, self.val_loader = self._split_dataset()
-        sample_features, _ = next(iter(self.train_loader))
-        input_dim = sample_features.shape[1]
+
+        sample_residues = next(iter(self.train_loader))
+        sample_features = sample_residues[0].features
+        self.input_dim = sample_features.shape[0]
 
         self.model = Autoencoder(
-            input_dim=input_dim,
+            input_dim=self.input_dim,
             hidden_layers=self.layers,
             latent_dim=self.latent_dim,
             dropout=self.dropout,
-            negative_slope=self.negative_slope
+            negative_slope=self.negative_slope,
         ).to(self.device)
-        self.loss_fn = torch.nn.MSELoss()
+
+        self.loss_fn = nn.MSELoss()
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learning_rate)
         self.visualizer = Visualiser(self.output_directory)
 
@@ -144,51 +177,56 @@ class AutoencoderTrainer:
         logger.info(self.model)
         logger.info("\n")
 
-    def _apply_balanced_sampling(self):
-        label_counts = {}
-        for residue in self.dataset.residues:
-            label_counts[residue.label] = label_counts.get(residue.label, 0) + 1
-        min_count = min(label_counts.values())
-        balanced_residues = []
-        label_counter = {}
-        for residue in self.dataset.residues:
-            label = residue.label
-            label_counter[label] = label_counter.get(label, 0)
-            if label_counter[label] < min_count:
-                balanced_residues.append(residue)
-                label_counter[label] += 1
-        self.dataset.residues = balanced_residues
-
     def _split_dataset(self):
-        num_chains = len(self.dataset.chains)
-        train_size = int(self.train_val_split * num_chains)
-        val_size = num_chains - train_size
-        train_chains, val_chains = random_split(self.dataset.chains, [train_size, val_size])
+        if self.balanced_sampling:
+            train_dataset, val_dataset = self.balanced()
+        else:
+            train_dataset, val_dataset = self.unbalanced()
 
-        train_residues = [residue for chain in train_chains for residue in chain.get_valid_residues()]
-        val_residues = [residue for chain in val_chains for residue in chain.get_valid_residues()]
+        self.num_training_residues = len(train_dataset)
+        self.num_validation_residues = len(val_dataset)
 
-        self.num_training_residues = len(train_residues)
-        self.num_validation_residues = len(val_residues)
+        train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, collate_fn=self._collate_fn)
+        val_loader = DataLoader(val_dataset, batch_size=self.batch_size, shuffle=False, collate_fn=self._collate_fn)
 
-        train_loader = DataLoader(
-            train_residues,
-            batch_size=self.batch_size,
-            shuffle=True,
-            collate_fn=self._residue_collate_fn
-        )
-        val_loader = DataLoader(
-            val_residues,
-            batch_size=self.batch_size,
-            shuffle=True,
-            collate_fn=self._residue_collate_fn
-        )
         return train_loader, val_loader
 
-    def _residue_collate_fn(self, batch):
-        features = torch.stack([item.features for item in batch])
-        residues = batch
-        return features, residues
+    def randomize_validation_set(self):
+        sample_size = int(self.dataset_size * self.train_val_split)
+        train_indices = self.random_number_generator.choice(self.sample_space, size=sample_size, replace=False)
+        validation_indices = np.setdiff1d(self.sample_space, train_indices, assume_unique=True)
+        return train_indices, validation_indices
+
+    def unbalanced(self):
+        train_indices, validation_indices = self.randomize_validation_set()
+        train_dataset = Subset(self.dataset, train_indices)
+        val_dataset = Subset(self.dataset, validation_indices)
+        return train_dataset, val_dataset
+
+    def balanced(self):
+        train_indices, validation_indices = self.randomize_validation_set()
+        non_validation_labels = np.array([self.dataset[i].label for i in train_indices])
+        class_indices = [
+            np.extract(non_validation_labels == amino_acid, train_indices)
+            for amino_acid in range(len(AMINO_ACID_INDICES) - 1)
+        ]
+        residue_frequencies = [len(amino_acid_partition) for amino_acid_partition in class_indices]
+        class_sample_size = min(residue_frequencies)
+        class_samples = [
+            self.random_number_generator.choice(indices, size=class_sample_size, replace=False)
+            for indices in class_indices
+        ]
+        balanced_train_indices = np.concatenate(class_samples, axis=0)
+        train_dataset = Subset(self.dataset, balanced_train_indices)
+        val_dataset = Subset(self.dataset, validation_indices)
+        amino_acid_counts = Counter([self.dataset[i].label for i in balanced_train_indices])
+        print("Amino acid counts in balanced training set:")
+        for amino_acid, count in amino_acid_counts.items():
+            print(f"{STANDARD_AMINO_ACIDS[amino_acid]}: {count}")
+        return train_dataset, val_dataset
+
+    def _collate_fn(self, batch):
+        return batch
 
     def train(self):
         logger.info("Starting training loop...\n")
@@ -206,9 +244,6 @@ class AutoencoderTrainer:
             val_results = self._validate_epoch()
             val_loss = val_results['avg_loss']
             val_mse_per_residue = val_results['mse_per_residue']
-            val_latents = val_results['latents']
-            val_residues = val_results['residues']
-            val_reconstructed_vectors = val_results['reconstructed_vectors']
 
             train_losses.append(train_loss)
             val_losses.append(val_loss)
@@ -222,52 +257,10 @@ class AutoencoderTrainer:
 
         logger.info("Training loop completed.\n")
 
-        model_save_path = self.output_directory / 'trained_model.pth'
-        torch.save({
-            'model_state_dict': self.model.state_dict(),
-            'config': {
-                'input_dim': self.model.input_dim,
-                'layers': self.model.hidden_layers,
-                'latent_dim': self.model.latent_dim,
-                'dropout': self.model.dropout_rate,
-                'negative_slope': self.model.negative_slope
-            }
-        }, model_save_path)
-        logger.info(f"Model saved to {model_save_path}\n")
+        config = self._collect_config()
 
-        logger.info("Generating plots and reports...\n")
-        self.visualizer.plot_loss_curves(train_losses, val_losses)
-        self.visualizer.plot_per_class_loss_over_epochs(per_residue_train_history, per_residue_val_history)
-        self.visualizer.generate_training_report(
-            model=self.model,
-            per_residue_mse=val_mse_per_residue,
-            per_class_loss_history=per_residue_val_history,
-            train_losses=train_losses,
-            val_losses=val_losses,
-            optimizer=self.optimizer,
-            num_training_residues=self.num_training_residues,
-            num_validation_residues=self.num_validation_residues
-        )
-        self.visualizer.plot_reconstruction_error_distribution(
-            val_results['reconstruction_errors'],
-            val_results['residue_labels'],
-            data_set_label='Validation Set'
-        )
-        self.visualizer.plot_latent_space(
-            val_latents,
-            val_results['residue_labels'],
-            data_set_label='Validation Set'
-        )
-
-        if self.save_val_features:
-            self.visualizer.save_features(
-                val_residues,
-                val_latents,
-                val_reconstructed_vectors,
-                self.dataset.chain_shapes,
-                self.output_directory / 'validation_features',
-                save_latent_vectors=True
-            )
+        self._save_model()
+        self._generate_plots_and_reports(train_losses, val_losses, per_residue_train_history, per_residue_val_history, val_results, config)
 
         logger.info(f"Final Validation MSE: {val_losses[-1]:.6f}\n")
         logger.info("Training process completed successfully.\n")
@@ -277,25 +270,25 @@ class AutoencoderTrainer:
         total_loss = 0.0
         mse_per_residue = {index: [] for index in AMINO_ACID_INDICES.values()}
 
-        for input_vectors, residues in self.train_loader:
-            input_vectors = input_vectors.to(self.device)
+        for residues in self.train_loader:
+            input_vectors = torch.stack([residue.features for residue in residues]).to(self.device)
             reconstructed_vectors, _ = self.model(input_vectors)
-            constrained_vectors = self.apply_constraints(reconstructed_vectors, residues)
-
-            loss = self.loss_fn(constrained_vectors, input_vectors)
+            loss = self.loss_fn(reconstructed_vectors, input_vectors)
             total_loss += loss.item()
 
-            residue_labels = [residue.label for residue in residues]
-            sample_losses = (constrained_vectors - input_vectors).pow(2).mean(dim=1).detach().cpu().numpy()
-            for label, sample_loss in zip(residue_labels, sample_losses):
-                mse_per_residue[label].append(sample_loss)
+            mse = loss.item()
+            for residue in residues:
+                mse_per_residue[residue.label].append(mse)
 
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
 
         avg_loss = total_loss / len(self.train_loader)
-        mse_per_residue_avg = {index: np.mean(mse_list) if mse_list else 0.0 for index, mse_list in mse_per_residue.items()}
+        mse_per_residue_avg = {
+            index: np.mean(mse_list) if mse_list else 0.0
+            for index, mse_list in mse_per_residue.items()
+        }
         return avg_loss, mse_per_residue_avg
 
     def _validate_epoch(self):
@@ -305,88 +298,107 @@ class AutoencoderTrainer:
         all_latents = []
         all_reconstructed_vectors = []
         all_residues = []
-        reconstruction_errors = []
-        residue_labels = []
+        all_reconstruction_errors = []
 
         with torch.no_grad():
-            for input_vectors, residues in self.val_loader:
-                input_vectors = input_vectors.to(self.device)
+            for residues in self.val_loader:
+                input_vectors = torch.stack([residue.features for residue in residues]).to(self.device)
                 reconstructed_vectors, latents = self.model(input_vectors)
                 loss = self.loss_fn(reconstructed_vectors, input_vectors)
                 total_loss += loss.item()
 
-                residue_labels_batch = [residue.label for residue in residues]
-                sample_losses = (reconstructed_vectors - input_vectors).pow(2).mean(dim=1).cpu().numpy()
-                for label, sample_loss in zip(residue_labels_batch, sample_losses):
-                    mse_per_residue[label].append(sample_loss)
-                    reconstruction_errors.append(sample_loss)
-                    residue_labels.append(label)
+                mse = loss.item()
+                for residue in residues:
+                    mse_per_residue[residue.label].append(mse)
+                    all_reconstruction_errors.append(mse)
 
                 all_latents.append(latents.cpu().numpy())
                 all_reconstructed_vectors.append(reconstructed_vectors.cpu().numpy())
                 all_residues.extend(residues)
 
         avg_loss = total_loss / len(self.val_loader)
-        mse_per_residue_avg = {index: np.mean(mse_list) if mse_list else 0.0 for index, mse_list in mse_per_residue.items()}
+        mse_per_residue_avg = {
+            index: np.mean(mse_list) if mse_list else 0.0
+            for index, mse_list in mse_per_residue.items()
+        }
         all_latents = np.concatenate(all_latents, axis=0)
         all_reconstructed_vectors = np.concatenate(all_reconstructed_vectors, axis=0)
 
         return {
             'avg_loss': avg_loss,
             'mse_per_residue': mse_per_residue_avg,
-            'latents': all_latents,
+            'latent_vectors': all_latents,
             'reconstructed_vectors': all_reconstructed_vectors,
             'residues': all_residues,
-            'reconstruction_errors': np.array(reconstruction_errors),
-            'residue_labels': np.array(residue_labels)
+            'reconstruction_errors': np.array(all_reconstruction_errors),
         }
 
-    def apply_constraints(self, reconstructed_vectors, residues):
-        translations, rotations, torsional_angles = self._extract_features(reconstructed_vectors, residues)
-        rotations = self._normalize_rotations(rotations)
-        torsional_angles = self._correct_torsional_angles(torsional_angles)
-        constrained_vectors = self._flatten_and_concatenate(translations, rotations, torsional_angles)
-        return constrained_vectors
+    def _generate_plots_and_reports(self, train_losses, val_losses, per_residue_train_history, per_residue_val_history, val_results, config):
+        logger.info("Generating plots and reports...\n")
+        self.visualizer.plot_loss_curves(train_losses, val_losses)
+        self.visualizer.plot_per_class_loss_over_epochs(per_residue_train_history, per_residue_val_history)
+        self.visualizer.generate_training_report(
+            model=self.model,
+            config=config,
+            per_residue_mse=val_results['mse_per_residue'],
+            per_class_loss_history=per_residue_val_history,
+            train_losses=train_losses,
+            val_losses=val_losses,
+            optimizer=self.optimizer,
+            num_training_residues=self.num_training_residues,
+            num_validation_residues=self.num_validation_residues,
+        )
+        self.visualizer.plot_reconstruction_error_distribution(
+            val_results['reconstruction_errors'],
+            [residue.label for residue in val_results['residues']],
+            data_set_label='Validation Set',
+        )
+        self.visualizer.plot_latent_space(
+            val_results['latent_vectors'],
+            [residue.label for residue in val_results['residues']],
+            data_set_label='Validation Set',
+        )
 
-    def _extract_features(self, vectors, residues):
-        batch_size = vectors.size(0)
-        chain_id = residues[0].chain_id
-        features = self.dataset.chain_shapes[chain_id]
+        if self.save_val_features:
+            self.visualizer.save_features(
+                val_results['residues'],
+                val_results['latent_vectors'],
+                val_results['reconstructed_vectors'],
+                self.dataset.chain_shapes,
+                self.output_directory / 'validation_features',
+                scaler=self.dataset.scaler,
+                save_latent_vectors=self.save_val_features,
+            )
 
-        translations_dim = features.translations.shape[1] * features.translations.shape[2]
-        rotations_dim = features.rotations.shape[1] * features.rotations.shape[2]
+    def _save_model(self):
+        model_save_path = self.output_directory / 'trained_model.pth'
+        torch.save(
+            {
+                'model_state_dict': self.model.state_dict(),
+                'config': self._collect_config(),
+                'scaler': self.dataset.scaler,
+            },
+            model_save_path,
+        )
+        logger.info(f"Model saved to {model_save_path}\n")
 
-        translations_shape = features.translations.shape[1:]
-        rotations_shape = features.rotations.shape[1:]
-        torsional_angles_shape = features.torsional_angles.shape[1:]
+    def _collect_config(self):
+        return {
+            'input_dim': self.input_dim,
+            'Layers': self.layers,
+            'Latent Dimension': self.latent_dim,
+            'Dropout Rate': self.dropout,
+            'Batch Size': self.batch_size,
+            'Learning Rate': self.learning_rate,
+            'Epochs': self.epochs,
+            'Device': self.device,
+            'Balanced Sampling': self.balanced_sampling,
+            'Seed': self.seed,
+            'Negative Slope': self.negative_slope,
+            'Save Validation Features': self.save_val_features,
+            'Train-Validation Split': self.train_val_split,
+        }
 
-        translations = vectors[:, :translations_dim].reshape(batch_size, *translations_shape)
-        rotations = vectors[:, translations_dim:translations_dim + rotations_dim].reshape(batch_size, *rotations_shape)
-        torsional_angles = vectors[:, translations_dim + rotations_dim:].reshape(batch_size, *torsional_angles_shape)
-
-        return translations, rotations, torsional_angles
-
-    def _normalize_rotations(self, rotations):
-        norms = rotations.norm(dim=2, keepdim=True).clamp(min=1e-8)
-        normalized_rotations = rotations / norms
-        return normalized_rotations
-
-    def _correct_torsional_angles(self, torsional_angles):
-        sin_values = torsional_angles[:, :, :, 0]
-        cos_values = torsional_angles[:, :, :, 1]
-        theta = torch.atan2(sin_values, cos_values)
-        sin_corrected = torch.sin(theta)
-        cos_corrected = torch.cos(theta)
-        corrected_torsional_angles = torch.stack([sin_corrected, cos_corrected], dim=-1)
-        return corrected_torsional_angles
-
-    def _flatten_and_concatenate(self, translations, rotations, torsional_angles):
-        batch_size = translations.size(0)
-        translations_flat = translations.view(batch_size, -1)
-        rotations_flat = rotations.view(batch_size, -1)
-        torsional_angles_flat = torsional_angles.view(batch_size, -1)
-        constrained_vectors = torch.cat([translations_flat, rotations_flat, torsional_angles_flat], dim=1)
-        return constrained_vectors
 
 def get_arguments():
     parser = argparse.ArgumentParser(description="Train an autoencoder model for amino acid features.")
@@ -406,6 +418,7 @@ def get_arguments():
     parser.add_argument("--save_val_features", action="store_true", help="Save features for the validation set.")
     parser.add_argument("--train_val_split", type=float, default=0.8, help="Ratio for splitting the dataset.")
     return parser.parse_args()
+
 
 def train_model():
     args = get_arguments()
@@ -427,9 +440,10 @@ def train_model():
         balanced_sampling=args.balanced_sampling,
         negative_slope=args.negative_slope,
         save_val_features=args.save_val_features,
-        train_val_split=args.train_val_split
+        train_val_split=args.train_val_split,
     )
     trainer.train()
+
 
 if __name__ == "__main__":
     train_model()

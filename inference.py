@@ -2,14 +2,17 @@ import argparse
 import pathlib
 import logging
 import torch
+import torch.nn as nn
 import numpy as np
 from torch.utils.data import DataLoader, Dataset
 from autoencoder import Autoencoder
 from visualiser import Visualiser
 from constants import AMINO_ACID_INDICES
+from sklearn.preprocessing import StandardScaler
 
 logging.basicConfig(level=logging.INFO, format='%(message)s')
 logger = logging.getLogger(__name__)
+
 
 class Features:
     def __init__(self, translations, rotations, torsional_angles):
@@ -23,12 +26,14 @@ class Features:
         torsional_angles_flat = self.torsional_angles.view(self.torsional_angles.size(0), -1)
         return torch.cat([translations_flat, rotations_flat, torsional_angles_flat], dim=1)
 
+
 class Residue:
     def __init__(self, features, label, chain_id, sequence_position):
         self.features = features
         self.label = label
         self.chain_id = chain_id
         self.sequence_position = sequence_position
+
 
 class Chain:
     def __init__(self, chain_id, feature_data):
@@ -37,7 +42,7 @@ class Chain:
         self.features = Features(
             translations=feature_data['translations'],
             rotations=feature_data['rotations'],
-            torsional_angles=feature_data['torsional_angles']
+            torsional_angles=feature_data['torsional_angles'],
         )
 
     def get_residues(self):
@@ -48,18 +53,23 @@ class Chain:
                 features=feature_vectors[i],
                 label=labels[i].item(),
                 chain_id=self.chain_id,
-                sequence_position=i
+                sequence_position=i,
             )
             for i in range(len(labels))
         ]
 
+
 class StructureDataset(Dataset):
-    def __init__(self, feature_directory, chain_list_file):
+    def __init__(self, feature_directory, chain_list_file, scaler=None):
         self.feature_directory = pathlib.Path(feature_directory)
         self.chain_ids = self._load_chain_ids(chain_list_file)
         self.residues = []
         self.chain_shapes = {}
         self._load_and_process_chains()
+
+        if scaler:
+            self._normalize_features(scaler)
+
         if not self.residues:
             raise ValueError("No valid data found after processing chains.")
 
@@ -85,16 +95,30 @@ class StructureDataset(Dataset):
             chain_data = self._load_chain_features(chain_id)
             self._process_chain(chain_id, chain_data)
 
+    def _normalize_features(self, scaler):
+        all_features = torch.stack([residue.features for residue in self.residues])
+        normalized_features = scaler.transform(all_features)
+        for i, residue in enumerate(self.residues):
+            residue.features = torch.tensor(normalized_features[i], dtype=torch.float32)
+
     def __len__(self):
         return len(self.residues)
 
     def __getitem__(self, idx):
-        residue = self.residues[idx]
-        return residue.features, residue
+        return self.residues[idx]
 
-class AutoencoderForwardPass:
-    def __init__(self, input_directory, chain_list_file, model_path, output_directory,
-                 batch_size, device, save_latent_space_vectors=False):
+
+class AutoencoderInference:
+    def __init__(
+        self,
+        input_directory,
+        chain_list_file,
+        model_path,
+        output_directory,
+        batch_size,
+        device,
+        save_latent_space_vectors=False,
+    ):
         self.input_directory = pathlib.Path(input_directory)
         self.chain_list_file = chain_list_file
         self.model_path = pathlib.Path(model_path)
@@ -104,9 +128,9 @@ class AutoencoderForwardPass:
         self.save_latent_space_vectors = save_latent_space_vectors
 
         self._prepare_output_directory()
+        self.model, self.scaler = self._load_model()
         self.dataset = self._load_dataset()
         self.data_loader = self._create_data_loader()
-        self.model = self._load_model()
         self.visualizer = Visualiser(self.output_directory)
 
         logger.info("\n=== Model Architecture ===\n")
@@ -116,37 +140,41 @@ class AutoencoderForwardPass:
     def _prepare_output_directory(self):
         self.output_directory.mkdir(parents=True, exist_ok=True)
 
+    def _load_model(self):
+        if not self.model_path.exists() or self.model_path.suffix != '.pth':
+            raise FileNotFoundError(f"Model file {self.model_path} not found or is not a .pth file.")
+
+        checkpoint = torch.load(self.model_path, map_location=self.device)
+        config = checkpoint['config']
+        scaler = checkpoint['scaler']
+
+        model = Autoencoder(
+            input_dim=config['input_dim'],
+            hidden_layers=config['Layers'],
+            latent_dim=config['Latent Dimension'],
+            dropout=config['Dropout Rate'],
+            negative_slope=config['Negative Slope'],
+        ).to(self.device)
+
+        model.load_state_dict(checkpoint['model_state_dict'])
+        model.eval()
+        return model, scaler
+
     def _load_dataset(self):
-        return StructureDataset(self.input_directory, self.chain_list_file)
+        dataset = StructureDataset(self.input_directory, self.chain_list_file)
+        dataset._normalize_features(self.scaler)
+        return dataset
 
     def _create_data_loader(self):
         return DataLoader(
             self.dataset,
             batch_size=self.batch_size,
             shuffle=False,
-            collate_fn=self._residue_collate_fn
+            collate_fn=self._residue_collate_fn,
         )
 
     def _residue_collate_fn(self, batch):
-        features = torch.stack([item[0] for item in batch])
-        residues = [item[1] for item in batch]
-        return features, residues
-
-    def _load_model(self):
-        if not self.model_path.exists() or self.model_path.suffix != '.pth':
-            raise FileNotFoundError(f"Model file {self.model_path} not found or is not a .pth file.")
-        checkpoint = torch.load(self.model_path, map_location=self.device)
-        config = checkpoint['config']
-        model = Autoencoder(
-            input_dim=config['input_dim'],
-            hidden_layers=config['layers'],
-            latent_dim=config['latent_dim'],
-            dropout=config['dropout'],
-            negative_slope=config['negative_slope']
-        ).to(self.device)
-        model.load_state_dict(checkpoint['model_state_dict'])
-        model.eval()
-        return model
+        return batch
 
     def forward_pass(self):
         logger.info("Starting forward pass...\n")
@@ -155,13 +183,17 @@ class AutoencoderForwardPass:
         all_residues = []
 
         mse_per_residue = {index: [] for index in AMINO_ACID_INDICES.values()}
+        loss_fn = nn.MSELoss(reduction='none')
 
+        self.model.eval()
         with torch.no_grad():
-            for input_vectors, residues in self.data_loader:
-                input_vectors = input_vectors.to(self.device)
+            for residues in self.data_loader:
+                input_vectors = torch.stack([residue.features for residue in residues]).to(self.device)
                 reconstructed_vectors, latent_vectors = self.model(input_vectors)
 
-                loss_per_sample = (reconstructed_vectors - input_vectors).pow(2).mean(dim=1).cpu().numpy()
+                loss = loss_fn(reconstructed_vectors, input_vectors)
+                loss_per_sample = loss.mean(dim=1).cpu().numpy()
+
                 residue_labels_batch = [residue.label for residue in residues]
                 for label, sample_loss in zip(residue_labels_batch, loss_per_sample):
                     mse_per_residue[label].append(sample_loss)
@@ -183,10 +215,10 @@ class AutoencoderForwardPass:
         self.visualizer.generate_forward_pass_report(
             model=self.model,
             per_residue_mse=mse_per_residue_avg,
-            num_residues=num_residues
+            num_residues=num_residues,
         )
 
-        reconstruction_errors = np.concatenate(list(mse_per_residue.values()))
+        reconstruction_errors = np.concatenate([np.array(mse_list) for mse_list in mse_per_residue.values()])
         residue_labels = np.concatenate([
             np.full(len(mse_list), index)
             for index, mse_list in mse_per_residue.items()
@@ -195,17 +227,17 @@ class AutoencoderForwardPass:
         self.visualizer.plot_reconstruction_error_distribution(
             reconstruction_errors,
             residue_labels,
-            data_set_label='Inference Data'
+            data_set_label='Inference Data',
         )
 
-        latent_vectors_array = np.concatenate(all_latent_vectors, axis=0) if all_latent_vectors else None
+        latent_vectors_array = np.concatenate(all_latent_vectors, axis=0)
         self.visualizer.plot_latent_space(
             latent_vectors_array,
-            residue_labels,
-            data_set_label='Inference Data'
+            [residue.label for residue in all_residues],
+            data_set_label='Inference Data',
         )
 
-        reconstructed_vectors_array = np.concatenate(all_reconstructed_vectors, axis=0) if all_reconstructed_vectors else None
+        reconstructed_vectors_array = np.concatenate(all_reconstructed_vectors, axis=0)
         output_dir = self.output_directory / 'reconstructed_features'
         self.visualizer.save_features(
             all_residues,
@@ -213,36 +245,38 @@ class AutoencoderForwardPass:
             reconstructed_vectors_array,
             self.dataset.chain_shapes,
             output_dir,
-            save_latent_vectors=self.save_latent_space_vectors
+            scaler=self.scaler,
+            save_latent_vectors=self.save_latent_space_vectors,
         )
 
         logger.info("Forward pass processing completed successfully.\n")
+
 
 def get_arguments():
     parser = argparse.ArgumentParser(description="Perform forward pass using a trained autoencoder model.")
     parser.add_argument("input_directory", type=str, help="Directory containing feature files.")
     parser.add_argument("chain_list_file", type=str, help="File containing chain IDs.")
     parser.add_argument("model_path", type=str, help="Path to the trained model file (.pth).")
-    parser.add_argument("-o", "--output_directory", type=str, default="./inference",
-                        help="Directory to save the output.")
+    parser.add_argument("-o", "--output_directory", type=str, default="./inference", help="Directory to save the output.")
     parser.add_argument("--batch_size", type=int, default=64, help="Batch size for processing.")
-    parser.add_argument("--save_latent_space_vectors", action="store_true",
-                        help="Save reconstructed features along with latent space vectors.")
+    parser.add_argument("--save_latent_space_vectors", action="store_true", help="Save reconstructed features along with latent space vectors.")
     return parser.parse_args()
+
 
 def inference():
     args = get_arguments()
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    autoencoder_fp = AutoencoderForwardPass(
+    autoencoder_inference = AutoencoderInference(
         input_directory=args.input_directory,
         chain_list_file=args.chain_list_file,
         model_path=args.model_path,
         output_directory=args.output_directory,
         batch_size=args.batch_size,
         device=device,
-        save_latent_space_vectors=args.save_latent_space_vectors
+        save_latent_space_vectors=args.save_latent_space_vectors,
     )
-    autoencoder_fp.forward_pass()
+    autoencoder_inference.forward_pass()
+
 
 if __name__ == "__main__":
     inference()
