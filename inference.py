@@ -8,7 +8,6 @@ from torch.utils.data import DataLoader, Dataset
 from autoencoder import Autoencoder
 from visualiser import Visualiser
 from constants import AMINO_ACID_INDICES
-from sklearn.preprocessing import StandardScaler
 
 logging.basicConfig(level=logging.INFO, format='%(message)s')
 logger = logging.getLogger(__name__)
@@ -118,6 +117,8 @@ class AutoencoderInference:
         batch_size,
         device,
         save_latent_space_vectors=False,
+        project_pca=False,
+        project_umap=False
     ):
         self.input_directory = pathlib.Path(input_directory)
         self.chain_list_file = chain_list_file
@@ -126,12 +127,20 @@ class AutoencoderInference:
         self.batch_size = batch_size
         self.device = device
         self.save_latent_space_vectors = save_latent_space_vectors
+        self.project_pca = project_pca
+        self.project_umap = project_umap
 
         self._prepare_output_directory()
         self.model, self.scaler = self._load_model()
         self.dataset = self._load_dataset()
         self.data_loader = self._create_data_loader()
         self.visualizer = Visualiser(self.output_directory)
+
+        logger.info("=== Chains ===\n")
+        logger.info(f"Number of chains processed: {len(self.dataset.chain_ids)}\n")
+
+        logger.info("=== Dataset Sizes ===\n")
+        logger.info(f"Number of residues processed: {len(self.dataset.residues)}\n")
 
         logger.info("\n=== Model Architecture ===\n")
         logger.info(self.model)
@@ -216,6 +225,7 @@ class AutoencoderInference:
             model=self.model,
             per_residue_mse=mse_per_residue_avg,
             num_residues=num_residues,
+            num_chains=len(self.dataset.chain_ids)
         )
 
         reconstruction_errors = np.concatenate([np.array(mse_list) for mse_list in mse_per_residue.values()])
@@ -249,6 +259,22 @@ class AutoencoderInference:
             save_latent_vectors=self.save_latent_space_vectors,
         )
 
+        if self.project_pca:
+            original_features = torch.stack([residue.features for residue in all_residues]).numpy()
+            self.visualizer.plot_pca_projection(
+                original_features,
+                residue_labels,
+                data_set_label='Original Data'
+            )
+
+        if self.project_umap:
+            original_features = torch.stack([residue.features for residue in all_residues]).numpy()
+            self.visualizer.plot_umap_projection(
+                original_features,
+                residue_labels,
+                data_set_label='Original Data'
+            )
+
         logger.info("Forward pass processing completed successfully.\n")
 
 
@@ -260,6 +286,8 @@ def get_arguments():
     parser.add_argument("-o", "--output_directory", type=str, default="./inference", help="Directory to save the output.")
     parser.add_argument("--batch_size", type=int, default=64, help="Batch size for processing.")
     parser.add_argument("--save_latent_space_vectors", action="store_true", help="Save reconstructed features along with latent space vectors.")
+    parser.add_argument("--project_pca", action="store_true", help="Apply PCA projection on original features.")
+    parser.add_argument("--project_umap", action="store_true", help="Apply UMAP projection on original features.")
     return parser.parse_args()
 
 
@@ -274,6 +302,8 @@ def inference():
         batch_size=args.batch_size,
         device=device,
         save_latent_space_vectors=args.save_latent_space_vectors,
+        project_pca=args.project_pca,
+        project_umap=args.project_umap
     )
     autoencoder_inference.forward_pass()
 

@@ -66,8 +66,8 @@ class StructureDataset(Dataset):
         self.feature_directory = pathlib.Path(feature_directory)
         self.chain_ids = self._load_chain_ids(chain_list_file)
         if test_chain_list:
-            test_chains = self._load_chain_ids(test_chain_list)
-            self.chain_ids = [chain for chain in self.chain_ids if chain not in test_chains]
+            self.test_chain_ids = self._load_chain_ids(test_chain_list)
+            self.chain_ids = [chain for chain in self.chain_ids if chain not in self.test_chain_ids]
         if seed is not None:
             torch.manual_seed(seed)
             np.random.seed(seed)
@@ -173,8 +173,33 @@ class AutoencoderTrainer:
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learning_rate)
         self.visualizer = Visualiser(self.output_directory)
 
+        logger.info("=== Chains ===\n")
+        logger.info(f"Number of test chains: {len(self.dataset.test_chain_ids)}\n")
+        logger.info(f"Number of training chains: {len(self.dataset.chain_ids)}\n")
+        logger.info(f"Total Chains: {len(self.dataset.test_chain_ids) + len(self.dataset.chain_ids)}\n")
+        logger.info("\n")
+
+        logger.info("=== Dataset Sizes ===\n")
+        logger.info(f"Original dataset size (unbalanced): {self.dataset_size}\n")
+        if self.balanced_sampling:
+            logger.info(f"Number of training residues (balanced): {self.num_training_residues}\n")
+        else:
+            logger.info(f"Number of training residues: {self.num_training_residues}\n")
+        logger.info(f"Number of validation residues: {self.num_validation_residues}\n")
+        logger.info(f"Total residues: {self.num_training_residues + self.num_validation_residues}\n")
+        logger.info("\n")
+
         logger.info("\n=== Model Architecture ===\n")
         logger.info(self.model)
+        logger.info("\n")
+
+        logger.info("=== Model Parameters ===\n")
+        for param, value in self._collect_config().items():
+            logger.info(f"{param}: {value}\n")
+        logger.info("\n")
+
+        logger.info("=== Optimizer ===\n")
+        logger.info(f"{self.optimizer}\n")
         logger.info("\n")
 
     def _split_dataset(self):
@@ -192,9 +217,10 @@ class AutoencoderTrainer:
         return train_loader, val_loader
 
     def randomize_validation_set(self):
-        sample_size = int(self.dataset_size * self.train_val_split)
-        train_indices = self.random_number_generator.choice(self.sample_space, size=sample_size, replace=False)
-        validation_indices = np.setdiff1d(self.sample_space, train_indices, assume_unique=True)
+        indices = np.arange(self.dataset_size)
+        self.random_number_generator.shuffle(indices)
+        split = int(np.floor(self.train_val_split * self.dataset_size))
+        train_indices, validation_indices = indices[:split], indices[split:]
         return train_indices, validation_indices
 
     def unbalanced(self):
@@ -347,6 +373,10 @@ class AutoencoderTrainer:
             optimizer=self.optimizer,
             num_training_residues=self.num_training_residues,
             num_validation_residues=self.num_validation_residues,
+            dataset_size=self.dataset_size,
+            balanced_sampling=self.balanced_sampling,
+            test_chain_ids=len(self.dataset.test_chain_ids),
+            chain_ids=len(self.dataset.chain_ids)
         )
         self.visualizer.plot_reconstruction_error_distribution(
             val_results['reconstruction_errors'],

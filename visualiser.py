@@ -1,15 +1,14 @@
 import pathlib
 import logging
 import umap
-import torch
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
 from constants import AMINO_ACID_INDICES
 
 logging.basicConfig(level=logging.INFO, format='%(message)s')
 logger = logging.getLogger(__name__)
-
 
 class Visualiser:
     def __init__(self, output_directory, reconstruction_threshold=0.1):
@@ -19,11 +18,28 @@ class Visualiser:
 
     def generate_training_report(
         self, model, config, per_residue_mse, per_class_loss_history,
-        train_losses, val_losses, optimizer, num_training_residues, num_validation_residues
+        train_losses, val_losses, optimizer, num_training_residues, num_validation_residues,
+        dataset_size, balanced_sampling, test_chain_ids, chain_ids
     ):
         report_file = self.output_directory / 'training_report.txt'
         with open(report_file, 'w') as f:
             f.write("=== Training Report ===\n\n")
+
+            f.write("=== Chains ===\n")
+            f.write(f"Number of test chains: {test_chain_ids}\n")
+            f.write(f"Number of training chains: {chain_ids}\n")
+            f.write(f"Total Chains: {test_chain_ids + chain_ids}\n")
+            f.write("\n\n")
+
+            f.write("=== Dataset Sizes ===\n")
+            f.write(f"Original dataset size (unbalanced): {dataset_size}\n")
+            if balanced_sampling:
+                f.write(f"Number of training residues (balanced): {num_training_residues}\n")
+            else:
+                f.write(f"Number of training residues: {num_training_residues}\n")
+            f.write(f"Number of validation residues: {num_validation_residues}\n")
+            f.write(f"Total residues: {num_training_residues + num_validation_residues}\n")
+            f.write("\n")
 
             f.write("=== Model Architecture ===\n")
             f.write(str(model))
@@ -38,12 +54,6 @@ class Visualiser:
             f.write(f"{optimizer}\n")
             f.write("\n")
 
-            f.write("=== Dataset Sizes ===\n")
-            f.write(f"Number of training residues: {num_training_residues}\n")
-            f.write(f"Number of validation residues: {num_validation_residues}\n")
-            f.write(f"Total residues: {num_training_residues + num_validation_residues}\n")
-            f.write("\n")
-
             f.write("=== Per-residue MSE ===\n")
             for residue_index, mse in per_residue_mse.items():
                 residue = self._get_residue_name(residue_index)
@@ -56,16 +66,22 @@ class Visualiser:
                     f"Epoch {epoch+1}: Training Loss: {train_losses[epoch]:.6f}, Validation Loss: {val_losses[epoch]:.6f}\n"
                 )
 
-    def generate_forward_pass_report(self, model, per_residue_mse, num_residues):
+    def generate_forward_pass_report(self, model, per_residue_mse, num_residues, num_chains):
         report_file = self.output_directory / 'forward_pass_report.txt'
         with open(report_file, 'w') as f:
             f.write("=== Forward Pass Report ===\n\n")
-            f.write("=== Model Architecture ===\n")
-            f.write(str(model))
+            f.write("=== Chains ===\n")
+            f.write(f"Number of chains processed: {num_chains}\n")
             f.write("\n\n")
 
             f.write("=== Dataset Size ===\n")
             f.write(f"Number of residues processed: {num_residues}\n")
+            f.write("\n\n")
+
+            f.write("=== Model Architecture ===\n")
+            f.write(str(model))
+            f.write("\n\n")
+
             f.write("\n=== Per-residue MSE (Forward Pass) ===\n")
             for residue, mse in per_residue_mse.items():
                 f.write(f"{residue}: {mse:.6f}\n")
@@ -163,6 +179,52 @@ class Visualiser:
         plt.close()
         df.to_csv(self.output_directory / f'latent_space_{data_set_label.replace(" ", "_")}.csv', index=False)
 
+    def plot_pca_projection(self, original_features, residue_labels, data_set_label='PCA'):
+        pca = PCA(n_components=2)
+        pca_features = pca.fit_transform(original_features)
+        residue_names = [self._get_residue_name(label) for label in residue_labels]
+        df = pd.DataFrame({
+            'PCA1': pca_features[:, 0],
+            'PCA2': pca_features[:, 1],
+            'Residue': residue_names,
+        })
+        plt.figure(figsize=(10, 8))
+        unique_residues = df['Residue'].unique()
+        for residue in unique_residues:
+            subset = df[df['Residue'] == residue]
+            plt.scatter(subset['PCA1'], subset['PCA2'], label=residue, s=10)
+        plt.xlabel('PCA1')
+        plt.ylabel('PCA2')
+        plt.title(f'PCA Projection of Original Features ({data_set_label})')
+        plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', markerscale=2)
+        plt.tight_layout()
+        plt.savefig(self.output_directory / f'pca_projection_{data_set_label.replace(" ", "_")}.png')
+        plt.close()
+        df.to_csv(self.output_directory / f'pca_projection_{data_set_label.replace(" ", "_")}.csv', index=False)
+
+    def plot_umap_projection(self, original_features, residue_labels, data_set_label='UMAP'):
+        umap_model = umap.UMAP(n_components=2, random_state=42)
+        umap_features = umap_model.fit_transform(original_features)
+        residue_names = [self._get_residue_name(label) for label in residue_labels]
+        df = pd.DataFrame({
+            'UMAP1': umap_features[:, 0],
+            'UMAP2': umap_features[:, 1],
+            'Residue': residue_names,
+        })
+        plt.figure(figsize=(10, 8))
+        unique_residues = df['Residue'].unique()
+        for residue in unique_residues:
+            subset = df[df['Residue'] == residue]
+            plt.scatter(subset['UMAP1'], subset['UMAP2'], label=residue, s=10)
+        plt.xlabel('UMAP1')
+        plt.ylabel('UMAP2')
+        plt.title(f'UMAP Projection of Original Features ({data_set_label})')
+        plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', markerscale=2)
+        plt.tight_layout()
+        plt.savefig(self.output_directory / f'umap_projection_{data_set_label.replace(" ", "_")}.png')
+        plt.close()
+        df.to_csv(self.output_directory / f'umap_projection_{data_set_label.replace(" ", "_")}.csv', index=False)
+
     def save_features(
         self, all_residues, latent_vectors, reconstructed_vectors, chain_shapes,
         output_dir, scaler=None, save_latent_vectors=True
@@ -204,8 +266,6 @@ class Visualiser:
             f.writelines(f"{chain_id}\n" for chain_id in chain_to_residues)
 
         logger.info(f"Saved features for {len(chain_to_residues)} chains")
-        logger.info(f"Original residues: {len(all_residues)}")
-        logger.info(f"Reconstructed vectors: {len(reconstructed_vectors)}")
 
     def _extract_features_from_vector(self, vector, chain_id, chain_shapes):
         features = chain_shapes[chain_id]
