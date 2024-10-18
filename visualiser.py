@@ -6,30 +6,30 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from constants import AMINO_ACID_INDICES
+from sklearn.manifold import trustworthiness
 
 logging.basicConfig(level=logging.INFO, format='%(message)s')
 logger = logging.getLogger(__name__)
 
 class Visualiser:
-    def __init__(self, output_directory, reconstruction_threshold=0.1):
+    def __init__(self, output_directory):
         self.output_directory = pathlib.Path(output_directory)
         self.output_directory.mkdir(parents=True, exist_ok=True)
-        self.reconstruction_threshold = reconstruction_threshold
 
     def generate_training_report(
         self, model, config, per_residue_mse, per_class_loss_history,
         train_losses, val_losses, optimizer, num_training_residues, num_validation_residues,
-        dataset_size, balanced_sampling, test_chain_ids, chain_ids
+        dataset_size, balanced_sampling, num_test_chains, num_training_chains, umap_metrics=None
     ):
-        report_file = self.output_directory / 'training_report.txt'
+        report_file = self.output_directory / 'report.txt'
         with open(report_file, 'w') as f:
             f.write("=== Training Report ===\n\n")
 
             f.write("=== Chains ===\n")
-            f.write(f"Number of test chains: {test_chain_ids}\n")
-            f.write(f"Number of training chains: {chain_ids}\n")
-            f.write(f"Total Chains: {test_chain_ids + chain_ids}\n")
-            f.write("\n\n")
+            f.write(f"Number of test chains: {num_test_chains}\n")
+            f.write(f"Number of training chains: {num_training_chains}\n")
+            f.write(f"Total Chains: {num_test_chains + num_training_chains}\n")
+            f.write("\n")
 
             f.write("=== Dataset Sizes ===\n")
             f.write(f"Original dataset size (unbalanced): {dataset_size}\n")
@@ -65,26 +65,56 @@ class Visualiser:
                 f.write(
                     f"Epoch {epoch+1}: Training Loss: {train_losses[epoch]:.6f}, Validation Loss: {val_losses[epoch]:.6f}\n"
                 )
+            f.write("\n")
 
-    def generate_forward_pass_report(self, model, per_residue_mse, num_residues, num_chains):
-        report_file = self.output_directory / 'forward_pass_report.txt'
+            if umap_metrics:
+                f.write("=== UMAP Metrics ===\n")
+                f.write(f"Trustworthiness Score: {umap_metrics['trustworthiness_score']:.2f}\n")
+                f.write(f"Neighbours: {umap_metrics['n_neighbors']}\n")
+                f.write(f"min_dist: {umap_metrics['min_dist']}\n")
+                f.write("\n")
+
+    def generate_inference_report(self, model, per_residue_mse, num_residues, num_chains, umap_metrics_latent, pca_metrics_input=None, umap_metrics_input=None):
+        report_file = self.output_directory / 'report.txt'
         with open(report_file, 'w') as f:
-            f.write("=== Forward Pass Report ===\n\n")
+            f.write("=== Inference Report ===\n\n")
+
             f.write("=== Chains ===\n")
             f.write(f"Number of chains processed: {num_chains}\n")
-            f.write("\n\n")
+            f.write("\n")
 
             f.write("=== Dataset Size ===\n")
             f.write(f"Number of residues processed: {num_residues}\n")
-            f.write("\n\n")
+            f.write("\n")
 
             f.write("=== Model Architecture ===\n")
             f.write(str(model))
             f.write("\n\n")
 
-            f.write("\n=== Per-residue MSE (Forward Pass) ===\n")
+            f.write("=== Per-residue MSE ===\n")
             for residue, mse in per_residue_mse.items():
                 f.write(f"{residue}: {mse:.6f}\n")
+            f.write("\n")
+
+            if pca_metrics_input:
+                f.write("=== PCA Metrics (Input) ===\n")
+                f.write(f"Explained Variance Ratios: {pca_metrics_input['explained_variance_ratio']}\n")
+                f.write(f"Cumulative Explained Variance Ratio: {pca_metrics_input['cumulative_variance_ratio']:.2f}\n")
+                f.write("\n")
+
+            if umap_metrics_input:
+                f.write("=== UMAP Metrics (Input) ===\n")
+                f.write(f"Trustworthiness Score: {umap_metrics_input['trustworthiness_score']:.2f}\n")
+                f.write(f"Neighbours: {umap_metrics_input['n_neighbors']}\n")
+                f.write(f"min_dist: {umap_metrics_input['min_dist']}\n")
+                f.write("\n")
+
+            if umap_metrics_latent:
+                f.write("=== UMAP Metrics (Latent) ===\n")
+                f.write(f"Trustworthiness Score: {umap_metrics_latent['trustworthiness_score']:.2f}\n")
+                f.write(f"Neighbours: {umap_metrics_latent['n_neighbors']}\n")
+                f.write(f"min_dist: {umap_metrics_latent['min_dist']}\n")
+                f.write("\n")
 
     def plot_loss_curves(self, train_losses, val_losses):
         epochs = range(1, len(train_losses) + 1)
@@ -119,7 +149,7 @@ class Visualiser:
         plt.title('Per-Class Loss Over Epochs')
         plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
         plt.tight_layout()
-        plt.savefig(self.output_directory / 'per_class_loss_over_epochs.png')
+        plt.savefig(self.output_directory / 'per_class_loss.png')
         plt.close()
 
         data = {'Epoch': epochs}
@@ -127,61 +157,17 @@ class Visualiser:
             data[f'Train {residue}'] = train_history[residue]
             data[f'Val {residue}'] = val_history[residue]
         df = pd.DataFrame(data)
-        df.to_csv(self.output_directory / 'per_class_loss_over_epochs.csv', index=False)
+        df.to_csv(self.output_directory / 'per_class_loss.csv', index=False)
 
-    def plot_reconstruction_error_distribution(self, reconstruction_errors, residue_labels, data_set_label=''):
-        error_df = pd.DataFrame({
-            'Error': reconstruction_errors,
-            'Residue': [self._get_residue_name(label) for label in residue_labels],
-        })
-        plt.figure(figsize=(12, 8))
-        residues = error_df['Residue'].unique()
-        positions = range(len(residues))
+    def plot_pca_projection(self, features, residue_labels, data_set_label='', n_components=2):
+        pca = PCA(n_components=n_components)
+        pca_features = pca.fit_transform(features)
+        explained_variance_ratio = pca.explained_variance_ratio_
+        cumulative_variance_ratio = np.cumsum(explained_variance_ratio)
 
-        for i, residue in enumerate(residues):
-            errors = error_df[error_df['Residue'] == residue]['Error']
-            jittered_positions = np.random.normal(i, 0.05, size=len(errors))
-            plt.scatter(jittered_positions, errors, alpha=0.6, label=residue)
+        logger.info(f'\nPCA Explained Variance Ratios (first {n_components} components): {explained_variance_ratio}')
+        logger.info(f'PCA Cumulative Explained Variance Ratio (first {n_components} components): {cumulative_variance_ratio[-1]:.2f}\n')
 
-        plt.title(f'Reconstruction Error Distribution by Residue Type ({data_set_label})')
-        plt.xlabel('Residue Type')
-        plt.ylabel('Reconstruction Error (MSE)')
-        plt.xticks(positions, residues, rotation=90)
-        plt.tight_layout()
-        plt.savefig(self.output_directory / f'reconstruction_error_distribution_{data_set_label.replace(" ", "_")}.png')
-        plt.close()
-
-        error_df.to_csv(
-            self.output_directory / f'reconstruction_error_distribution_{data_set_label.replace(" ", "_")}.csv',
-            index=False,
-        )
-
-    def plot_latent_space(self, latent_vectors, residue_labels, data_set_label=''):
-        reducer = umap.UMAP()
-        latent_2d = reducer.fit_transform(latent_vectors)
-        residue_names = [self._get_residue_name(label) for label in residue_labels]
-        df = pd.DataFrame({
-            'UMAP1': latent_2d[:, 0],
-            'UMAP2': latent_2d[:, 1],
-            'Residue': residue_names,
-        })
-        plt.figure(figsize=(10, 8))
-        unique_residues = df['Residue'].unique()
-        for residue in unique_residues:
-            subset = df[df['Residue'] == residue]
-            plt.scatter(subset['UMAP1'], subset['UMAP2'], label=residue, s=10)
-        plt.xlabel('UMAP1')
-        plt.ylabel('UMAP2')
-        plt.title(f'Latent Space Visualization (UMAP) ({data_set_label})')
-        plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', markerscale=2)
-        plt.tight_layout()
-        plt.savefig(self.output_directory / f'latent_space_{data_set_label.replace(" ", "_")}.png')
-        plt.close()
-        df.to_csv(self.output_directory / f'latent_space_{data_set_label.replace(" ", "_")}.csv', index=False)
-
-    def plot_pca_projection(self, original_features, residue_labels, data_set_label='PCA'):
-        pca = PCA(n_components=2)
-        pca_features = pca.fit_transform(original_features)
         residue_names = [self._get_residue_name(label) for label in residue_labels]
         df = pd.DataFrame({
             'PCA1': pca_features[:, 0],
@@ -190,21 +176,38 @@ class Visualiser:
         })
         plt.figure(figsize=(10, 8))
         unique_residues = df['Residue'].unique()
-        for residue in unique_residues:
+        colors = plt.cm.get_cmap('tab20', len(unique_residues))
+        for i, residue in enumerate(unique_residues):
             subset = df[df['Residue'] == residue]
-            plt.scatter(subset['PCA1'], subset['PCA2'], label=residue, s=10)
-        plt.xlabel('PCA1')
-        plt.ylabel('PCA2')
-        plt.title(f'PCA Projection of Original Features ({data_set_label})')
+            plt.scatter(subset['PCA1'], subset['PCA2'], label=residue, color=colors(i % 20), s=10)
+        plt.xlabel('PCA Dimension 1')
+        plt.ylabel('PCA Dimension 2')
+        plt.title(f'PCA Projection {f"({data_set_label})" if data_set_label else ""}')
         plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', markerscale=2)
         plt.tight_layout()
-        plt.savefig(self.output_directory / f'pca_projection_{data_set_label.replace(" ", "_")}.png')
+        plt.savefig(self.output_directory / 'pca_projection.png')
         plt.close()
-        df.to_csv(self.output_directory / f'pca_projection_{data_set_label.replace(" ", "_")}.csv', index=False)
+        df.to_csv(self.output_directory / 'pca_projection.csv', index=False)
 
-    def plot_umap_projection(self, original_features, residue_labels, data_set_label='UMAP'):
-        umap_model = umap.UMAP(n_components=2, random_state=42)
-        umap_features = umap_model.fit_transform(original_features)
+        return {
+            'explained_variance_ratio': explained_variance_ratio,
+            'cumulative_variance_ratio': cumulative_variance_ratio[-1]
+        }
+
+    def plot_umap_projection(self, features, residue_labels, data_set_label='', n_components=2, n_neighbors=16, min_dist=0.1, metric='euclidean', random_state=42):
+        reducer = umap.UMAP(
+            n_components=n_components,
+            n_neighbors=n_neighbors,
+            min_dist=min_dist,
+            metric=metric,
+            random_state=random_state,
+            n_jobs=1
+        )
+        umap_features = reducer.fit_transform(features)
+
+        tw_score = trustworthiness(features, umap_features, n_neighbors=n_neighbors)
+        logger.info(f'UMAP Trustworthiness Score (n_neighbors={n_neighbors}, min_dist={min_dist}): {tw_score:.2f}\n')
+
         residue_names = [self._get_residue_name(label) for label in residue_labels]
         df = pd.DataFrame({
             'UMAP1': umap_features[:, 0],
@@ -213,22 +216,26 @@ class Visualiser:
         })
         plt.figure(figsize=(10, 8))
         unique_residues = df['Residue'].unique()
-        for residue in unique_residues:
+        colors = plt.cm.get_cmap('tab20', len(unique_residues))
+        for i, residue in enumerate(unique_residues):
             subset = df[df['Residue'] == residue]
-            plt.scatter(subset['UMAP1'], subset['UMAP2'], label=residue, s=10)
-        plt.xlabel('UMAP1')
-        plt.ylabel('UMAP2')
-        plt.title(f'UMAP Projection of Original Features ({data_set_label})')
+            plt.scatter(subset['UMAP1'], subset['UMAP2'], label=residue, color=colors(i % 20), s=10)
+        plt.xlabel('UMAP Dimension 1')
+        plt.ylabel('UMAP Dimension 2')
+        plt.title(f'UMAP Projection {f"({data_set_label})" if data_set_label else ""}')
         plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', markerscale=2)
         plt.tight_layout()
         plt.savefig(self.output_directory / f'umap_projection_{data_set_label.replace(" ", "_")}.png')
         plt.close()
         df.to_csv(self.output_directory / f'umap_projection_{data_set_label.replace(" ", "_")}.csv', index=False)
 
-    def save_features(
-        self, all_residues, latent_vectors, reconstructed_vectors, chain_shapes,
-        output_dir, scaler=None, save_latent_vectors=True
-    ):
+        return {
+            'trustworthiness_score': tw_score,
+            'n_neighbors': n_neighbors,
+            'min_dist': min_dist
+        }
+
+    def save_features(self, all_residues, latent_vectors, reconstructed_vectors, chain_shapes, output_dir, scaler=None, save_latent_vectors=True):
         output_dir = pathlib.Path(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -266,22 +273,6 @@ class Visualiser:
             f.writelines(f"{chain_id}\n" for chain_id in chain_to_residues)
 
         logger.info(f"Saved features for {len(chain_to_residues)} chains")
-
-    def _extract_features_from_vector(self, vector, chain_id, chain_shapes):
-        features = chain_shapes[chain_id]
-        batch_size = vector.size(0)
-        translations_dim = features.translations.shape[1] * features.translations.shape[2]
-        rotations_dim = features.rotations.shape[1] * features.rotations.shape[2]
-
-        translations_shape = features.translations.shape[1:]
-        rotations_shape = features.rotations.shape[1:]
-        torsional_angles_shape = features.torsional_angles.shape[1:]
-
-        translations = vector[:, :translations_dim].reshape(batch_size, *translations_shape)
-        rotations = vector[:, translations_dim:translations_dim + rotations_dim].reshape(batch_size, *rotations_shape)
-        torsional_angles = vector[:, translations_dim + rotations_dim:].reshape(batch_size, *torsional_angles_shape)
-
-        return translations, rotations, torsional_angles
 
     def _get_residue_name(self, label):
         for amino_acid, index in AMINO_ACID_INDICES.items():

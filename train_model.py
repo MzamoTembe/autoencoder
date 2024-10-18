@@ -47,7 +47,7 @@ class Chain:
         )
 
     def get_valid_residues(self):
-        valid_indices = self.labels != AMINO_ACID_INDICES['X']
+        valid_indices = self.labels != AMINO_ACID_INDICES.get('X', -1)
         labels = self.labels[valid_indices]
         feature_vectors = self.features.get_feature_vector()[valid_indices]
         return [
@@ -65,6 +65,7 @@ class StructureDataset(Dataset):
     def __init__(self, feature_directory, chain_list_file, test_chain_list=None, seed=None):
         self.feature_directory = pathlib.Path(feature_directory)
         self.chain_ids = self._load_chain_ids(chain_list_file)
+        self.test_chain_ids = []
         if test_chain_list:
             self.test_chain_ids = self._load_chain_ids(test_chain_list)
             self.chain_ids = [chain for chain in self.chain_ids if chain not in self.test_chain_ids]
@@ -236,15 +237,16 @@ class AutoencoderTrainer:
             np.extract(non_validation_labels == amino_acid, train_indices)
             for amino_acid in range(len(AMINO_ACID_INDICES) - 1)
         ]
-        residue_frequencies = [len(amino_acid_partition) for amino_acid_partition in class_indices]
+        residue_frequencies = [len(amino_acid_partition) for amino_acid_partition in class_indices if len(amino_acid_partition) > 0]
         class_sample_size = min(residue_frequencies)
         class_samples = [
             self.random_number_generator.choice(indices, size=class_sample_size, replace=False)
-            for indices in class_indices
+            for indices in class_indices if len(indices) > 0
         ]
         balanced_train_indices = np.concatenate(class_samples, axis=0)
         train_dataset = Subset(self.dataset, balanced_train_indices)
         val_dataset = Subset(self.dataset, validation_indices)
+        self.balanced_dataset_size = len(balanced_train_indices)
         amino_acid_counts = Counter([self.dataset[i].label for i in balanced_train_indices])
         print("Amino acid counts in balanced training set:")
         for amino_acid, count in amino_acid_counts.items():
@@ -363,6 +365,11 @@ class AutoencoderTrainer:
         logger.info("Generating plots and reports...\n")
         self.visualizer.plot_loss_curves(train_losses, val_losses)
         self.visualizer.plot_per_class_loss_over_epochs(per_residue_train_history, per_residue_val_history)
+        umap_metrics = self.visualizer.plot_umap_projection(
+            val_results['latent_vectors'],
+            [residue.label for residue in val_results['residues']],
+            data_set_label='latent vectors'
+        )
         self.visualizer.generate_training_report(
             model=self.model,
             config=config,
@@ -375,18 +382,9 @@ class AutoencoderTrainer:
             num_validation_residues=self.num_validation_residues,
             dataset_size=self.dataset_size,
             balanced_sampling=self.balanced_sampling,
-            test_chain_ids=len(self.dataset.test_chain_ids),
-            chain_ids=len(self.dataset.chain_ids)
-        )
-        self.visualizer.plot_reconstruction_error_distribution(
-            val_results['reconstruction_errors'],
-            [residue.label for residue in val_results['residues']],
-            data_set_label='Validation Set',
-        )
-        self.visualizer.plot_latent_space(
-            val_results['latent_vectors'],
-            [residue.label for residue in val_results['residues']],
-            data_set_label='Validation Set',
+            num_test_chains=len(self.dataset.test_chain_ids),
+            num_training_chains=len(self.dataset.chain_ids),
+            umap_metrics=umap_metrics
         )
 
         if self.save_val_features:
@@ -452,7 +450,7 @@ def get_arguments():
 
 def train_model():
     args = get_arguments()
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = "cpu" if torch.cuda.is_available() else "cpu"
 
     trainer = AutoencoderTrainer(
         input_directory=args.input_directory,
