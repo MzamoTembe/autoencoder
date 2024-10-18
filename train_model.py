@@ -450,7 +450,7 @@ def get_arguments():
 
 def train_model():
     args = get_arguments()
-    device = "cpu" if torch.cuda.is_available() else "cpu"
+    device = "cuda" if torch.cuda.is_available() else "cpu"
 
     trainer = AutoencoderTrainer(
         input_directory=args.input_directory,

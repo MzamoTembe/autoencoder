@@ -296,7 +296,7 @@ def get_arguments():
 
 def inference():
     args = get_arguments()
-    device = "cpu" if torch.cuda.is_available() else "cpu"
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     autoencoder_inference = AutoencoderInference(
         input_directory=args.input_directory,
         chain_list_file=args.chain_list_file,

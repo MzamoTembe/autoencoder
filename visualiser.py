@@ -6,7 +6,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from constants import AMINO_ACID_INDICES
-from sklearn.manifold import trustworthiness
 
 logging.basicConfig(level=logging.INFO, format='%(message)s')
 logger = logging.getLogger(__name__)
@@ -69,7 +68,6 @@ class Visualiser:
 
             if umap_metrics:
                 f.write("=== UMAP Metrics ===\n")
-                f.write(f"Trustworthiness Score: {umap_metrics['trustworthiness_score']:.2f}\n")
                 f.write(f"Neighbours: {umap_metrics['n_neighbors']}\n")
                 f.write(f"min_dist: {umap_metrics['min_dist']}\n")
                 f.write("\n")
@@ -104,14 +102,12 @@ class Visualiser:
 
             if umap_metrics_input:
                 f.write("=== UMAP Metrics (Input) ===\n")
-                f.write(f"Trustworthiness Score: {umap_metrics_input['trustworthiness_score']:.2f}\n")
                 f.write(f"Neighbours: {umap_metrics_input['n_neighbors']}\n")
                 f.write(f"min_dist: {umap_metrics_input['min_dist']}\n")
                 f.write("\n")
 
             if umap_metrics_latent:
                 f.write("=== UMAP Metrics (Latent) ===\n")
-                f.write(f"Trustworthiness Score: {umap_metrics_latent['trustworthiness_score']:.2f}\n")
                 f.write(f"Neighbours: {umap_metrics_latent['n_neighbors']}\n")
                 f.write(f"min_dist: {umap_metrics_latent['min_dist']}\n")
                 f.write("\n")
@@ -200,13 +196,9 @@ class Visualiser:
             n_neighbors=n_neighbors,
             min_dist=min_dist,
             metric=metric,
-            random_state=random_state,
-            n_jobs=1
+            random_state=random_state
         )
         umap_features = reducer.fit_transform(features)
-
-        tw_score = trustworthiness(features, umap_features, n_neighbors=n_neighbors)
-        logger.info(f'UMAP Trustworthiness Score (n_neighbors={n_neighbors}, min_dist={min_dist}): {tw_score:.2f}\n')
 
         residue_names = [self._get_residue_name(label) for label in residue_labels]
         df = pd.DataFrame({
@@ -230,7 +222,6 @@ class Visualiser:
         df.to_csv(self.output_directory / f'umap_projection_{data_set_label.replace(" ", "_")}.csv', index=False)
 
         return {
-            'trustworthiness_score': tw_score,
             'n_neighbors': n_neighbors,
             'min_dist': min_dist
         }
