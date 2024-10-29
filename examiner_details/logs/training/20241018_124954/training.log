@@ -1,0 +1,372 @@
+============================================================
+
+Autoencoder Training Job
+Job ID: 236606.hpc2.hpc
+Job Name: training
+Node(s): n05.hpc
+Queue: bix
+Submitted by: 25543350
+Training Output Directory: /home/25543350/autoencoder1/models/20241018_124954/training_results
+Feature Directory: /home/25543350/autoencoder1/features/20241011_163941
+
+============================================================
+
+Starting model training using train_model.py
+
+=== Chains ===
+
+Number of test chains: 2169
+
+Number of training chains: 19521
+
+Total Chains: 21690
+
+
+
+=== Dataset Sizes ===
+
+Original dataset size (unbalanced): 4523076
+
+Number of training residues: 3618460
+
+Number of validation residues: 904616
+
+Total residues: 4523076
+
+
+
+
+=== Model Architecture ===
+
+Autoencoder(
+  (encoder): Sequential(
+    (0): Linear(in_features=180, out_features=128, bias=True)
+    (1): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (2): LeakyReLU(negative_slope=0.01)
+    (3): Dropout(p=0.01, inplace=False)
+    (4): Linear(in_features=128, out_features=96, bias=True)
+    (5): BatchNorm1d(96, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (6): LeakyReLU(negative_slope=0.01)
+    (7): Dropout(p=0.01, inplace=False)
+    (8): Linear(in_features=96, out_features=64, bias=True)
+  )
+  (decoder): Sequential(
+    (0): Linear(in_features=64, out_features=96, bias=True)
+    (1): BatchNorm1d(96, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (2): LeakyReLU(negative_slope=0.01)
+    (3): Dropout(p=0.01, inplace=False)
+    (4): Linear(in_features=96, out_features=128, bias=True)
+    (5): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (6): LeakyReLU(negative_slope=0.01)
+    (7): Dropout(p=0.01, inplace=False)
+    (8): Linear(in_features=128, out_features=180, bias=True)
+  )
+)
+
+
+=== Model Parameters ===
+
+input_dim: 180
+
+Layers: [128, 96]
+
+Latent Dimension: 64
+
+Dropout Rate: 0.01
+
+Batch Size: 64
+
+Learning Rate: 0.001
+
+Epochs: 50
+
+Device: cpu
+
+Balanced Sampling: False
+
+Seed: 42
+
+Negative Slope: 0.01
+
+Save Validation Features: True
+
+Train-Validation Split: 0.8
+
+
+
+=== Optimizer ===
+
+Adam (
+Parameter Group 0
+    amsgrad: False
+    betas: (0.9, 0.999)
+    capturable: False
+    differentiable: False
+    eps: 1e-08
+    foreach: None
+    fused: None
+    lr: 0.001
+    maximize: False
+    weight_decay: 0
+)
+
+
+
+Starting training loop...
+
+Number of training residues: 3618460
+Number of validation residues: 904616
+
+Epoch 1/50
+
+Training Loss: 0.399242
+Validation Loss: 0.288514
+
+Epoch 2/50
+
+Training Loss: 0.333256
+Validation Loss: 0.270520
+
+Epoch 3/50
+
+Training Loss: 0.321325
+Validation Loss: 0.262942
+
+Epoch 4/50
+
+Training Loss: 0.312991
+Validation Loss: 0.257456
+
+Epoch 5/50
+
+Training Loss: 0.308680
+Validation Loss: 0.255717
+
+Epoch 6/50
+
+Training Loss: 0.305614
+Validation Loss: 0.253211
+
+Epoch 7/50
+
+Training Loss: 0.303675
+Validation Loss: 0.250854
+
+Epoch 8/50
+
+Training Loss: 0.301514
+Validation Loss: 0.249442
+
+Epoch 9/50
+
+Training Loss: 0.299115
+Validation Loss: 0.247779
+
+Epoch 10/50
+
+Training Loss: 0.297552
+Validation Loss: 0.246936
+
+Epoch 11/50
+
+Training Loss: 0.295739
+Validation Loss: 0.247053
+
+Epoch 12/50
+
+Training Loss: 0.294524
+Validation Loss: 0.246442
+
+Epoch 13/50
+
+Training Loss: 0.293975
+Validation Loss: 0.246244
+
+Epoch 14/50
+
+Training Loss: 0.293362
+Validation Loss: 0.246447
+
+Epoch 15/50
+
+Training Loss: 0.292835
+Validation Loss: 0.245924
+
+Epoch 16/50
+
+Training Loss: 0.292244
+Validation Loss: 0.246386
+
+Epoch 17/50
+
+Training Loss: 0.291641
+Validation Loss: 0.247720
+
+Epoch 18/50
+
+Training Loss: 0.291462
+Validation Loss: 0.247833
+
+Epoch 19/50
+
+Training Loss: 0.291380
+Validation Loss: 0.245564
+
+Epoch 20/50
+
+Training Loss: 0.291195
+Validation Loss: 0.246754
+
+Epoch 21/50
+
+Training Loss: 0.291391
+Validation Loss: 0.245637
+
+Epoch 22/50
+
+Training Loss: 0.291078
+Validation Loss: 0.246062
+
+Epoch 23/50
+
+Training Loss: 0.290908
+Validation Loss: 0.246130
+
+Epoch 24/50
+
+Training Loss: 0.290715
+Validation Loss: 0.246415
+
+Epoch 25/50
+
+Training Loss: 0.291071
+Validation Loss: 0.251231
+
+Epoch 26/50
+
+Training Loss: 0.290526
+Validation Loss: 0.256579
+
+Epoch 27/50
+
+Training Loss: 0.290411
+Validation Loss: 0.256491
+
+Epoch 28/50
+
+Training Loss: 0.290318
+Validation Loss: 0.253041
+
+Epoch 29/50
+
+Training Loss: 0.290283
+Validation Loss: 0.252850
+
+Epoch 30/50
+
+Training Loss: 0.290202
+Validation Loss: 0.252595
+
+Epoch 31/50
+
+Training Loss: 0.290141
+Validation Loss: 0.254684
+
+Epoch 32/50
+
+Training Loss: 0.290069
+Validation Loss: 0.257819
+
+Epoch 33/50
+
+Training Loss: 0.289929
+Validation Loss: 0.257507
+
+Epoch 34/50
+
+Training Loss: 0.289901
+Validation Loss: 0.252914
+
+Epoch 35/50
+
+Training Loss: 0.290083
+Validation Loss: 0.254620
+
+Epoch 36/50
+
+Training Loss: 0.289819
+Validation Loss: 0.255914
+
+Epoch 37/50
+
+Training Loss: 0.289514
+Validation Loss: 0.253989
+
+Epoch 38/50
+
+Training Loss: 0.289389
+Validation Loss: 0.253734
+
+Epoch 39/50
+
+Training Loss: 0.289447
+Validation Loss: 0.258322
+
+Epoch 40/50
+
+Training Loss: 0.289195
+Validation Loss: 0.254013
+
+Epoch 41/50
+
+Training Loss: 0.289250
+Validation Loss: 0.256538
+
+Epoch 42/50
+
+Training Loss: 0.289230
+Validation Loss: 0.255205
+
+Epoch 43/50
+
+Training Loss: 0.288945
+Validation Loss: 0.257143
+
+Epoch 44/50
+
+Training Loss: 0.288994
+Validation Loss: 0.258396
+
+Epoch 45/50
+
+Training Loss: 0.288987
+Validation Loss: 0.259552
+
+Epoch 46/50
+
+Training Loss: 0.288870
+Validation Loss: 0.262600
+
+Epoch 47/50
+
+Training Loss: 0.288852
+Validation Loss: 0.256150
+
+Epoch 48/50
+
+Training Loss: 0.288826
+Validation Loss: 0.257498
+
+Epoch 49/50
+
+
+============================================================
+
+Training Completed
+Results:
+  Training Output Directory: /home/25543350/autoencoder1/models/20241018_124954/training_results
+  Inference Output Directory: /home/25543350/autoencoder1/models/20241018_124954/test_inference_results
+  SeqPredNN Inference (Original Features): /home/25543350/autoencoder1/models/20241018_124954/original_seqprednn_results
+  SeqPredNN Inference (Recontructed Features): /home/25543350/autoencoder1/models/20241018_124954/reconstructed_seqprednn_results
+  Process started at: Fri Oct 18 12:49:54 SAST 2024
+  Process ended at: Fri Oct 18 18:20:25 SAST 2024

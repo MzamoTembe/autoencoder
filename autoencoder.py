@@ -10,8 +10,7 @@ class Autoencoder(nn.Module):
         self.input_dim = input_dim
         self.hidden_layers = hidden_layers
         self.latent_dim = latent_dim
-        
-        # Encoder
+
         encoder_layers = []
         in_features = input_dim
         for hidden_dim in hidden_layers:
@@ -24,8 +23,7 @@ class Autoencoder(nn.Module):
             in_features = hidden_dim
         encoder_layers.append(nn.Linear(in_features, latent_dim))
         self.encoder = nn.Sequential(*encoder_layers)
-        
-        # Decoder
+
         decoder_layers = []
         in_features = latent_dim
         for hidden_dim in reversed(hidden_layers):

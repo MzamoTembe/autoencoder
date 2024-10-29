@@ -1,0 +1,86 @@
+#!/bin/bash
+
+#PBS -N feature_extraction
+#PBS -l walltime=24:00:00
+#PBS -l ncpus=16
+#PBS -l mem=64GB
+#PBS -q bix
+#PBS -M 25543350@sun.ac.za
+#PBS -m abe
+#PBS -o /home/25543350/autoencoder1/scripts/unformatted_logs/
+#PBS -e /home/25543350/autoencoder1/scripts/unformatted_logs/
+
+timestamp=$(date +%Y%m%d_%H%M%S)
+LOG_DIR="/home/25543350/autoencoder1/logs/feature_extraction/${timestamp}"
+FEATURES_DIR="/home/25543350/autoencoder1/features/${timestamp}"
+PDB_DIR="/home/25543350/autoencoder1/pdb_files/20240915_000205"
+CENTRAL_LOG="/home/25543350/autoencoder1/logs/feature_extraction/timestamps.log"
+start_time=$(date)
+
+mkdir -p "$LOG_DIR" "$FEATURES_DIR"
+exec > "${LOG_DIR}/feature_extraction.log" 2>&1
+
+trap '{
+    end_time=$(date)
+    echo -e "\n============================================================\n"
+    echo "Feature Extraction Completed"
+    echo "Results:"
+    echo "  Total features generated: $total_features_generated"
+    echo "  Total processed chains: $total_processed_chains"
+    echo "  Training set size: $train_set_size chains"
+    echo "  Test set size: $test_set_size chains"
+    echo "  Process started at: $start_time"
+    echo "  Process ended at: $end_time"
+
+    {
+        echo -e "\n==================== Job Record ==========================="
+        echo "Job Type: Feature Extraction"
+        echo "Job ID: ${PBS_JOBID}"
+        echo "Job Name: ${PBS_JOBNAME}"
+        echo "Node(s): $(cat ${PBS_NODEFILE})"
+        echo "Queue: ${PBS_QUEUE}"
+        echo "Submitted by: ${PBS_O_LOGNAME}"
+        echo "Feature Directory: ${FEATURES_DIR}"
+        echo "Results:"
+        echo "  Total features generated: $total_features_generated"
+        echo "  Total processed chains: $total_processed_chains"
+        echo "  Training set size: $train_set_size chains"
+        echo "  Test set size: $test_set_size chains"
+        echo "  Process started at: $start_time"
+        echo "  Process ended at: $end_time"
+        echo "============================================================"
+    } >> "$CENTRAL_LOG"
+}' EXIT
+
+echo -e "============================================================\n"
+echo "Feature Extraction Job"
+echo "Job ID: ${PBS_JOBID}"
+echo "Job Name: ${PBS_JOBNAME}"
+echo "Node(s): $(cat ${PBS_NODEFILE})"
+echo "Queue: ${PBS_QUEUE}"
+echo "Submitted by: ${PBS_O_LOGNAME}"
+echo "Feature Directory: ${FEATURES_DIR}"
+echo -e "\n============================================================\n"
+echo -e "Starting feature extraction using featurise.py\n"
+
+cd /home/25543350/autoencoder1/autoencoder/
+source /home/25543350/anaconda3/bin/activate autoencoder
+python featurise.py -gm -o ${FEATURES_DIR} ${PDB_DIR}/chain_list.csv ${PDB_DIR}
+
+total_features_generated=$(wc -l < "${FEATURES_DIR}/chain_list.txt")
+total_processed_chains=$(($(wc -l < "${PDB_DIR}/chain_list.csv") - 1))
+
+CHAIN_LIST="${FEATURES_DIR}/chain_list.txt"
+TEST_CHAIN_LIST="${FEATURES_DIR}/test_chain_list.txt"
+
+total_chains=$(wc -l < "${CHAIN_LIST}")
+test_chain_count=$(echo "($total_chains + 9) / 10" | bc)
+
+shuf -n $test_chain_count "$CHAIN_LIST" > "$TEST_CHAIN_LIST"
+
+test_set_size=$(wc -l < "$TEST_CHAIN_LIST")
+train_set_size=$((total_chains - test_set_size))
+
+echo -e "\nCreated test_chain_list.txt with $test_set_size chains (10% of total)"
+echo -e "Training set size: $train_set_size chains"
+echo "Test chains saved to $TEST_CHAIN_LIST"

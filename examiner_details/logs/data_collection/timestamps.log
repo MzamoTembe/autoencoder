@@ -1,0 +1,36 @@
+
+==================== Job Record ===========================
+Job Type: Data Collection
+Job ID: 229693.hpc2.hpc
+Job Name: data_collection
+Running on node(s): n03.hpc
+Queue: bix
+Submitted by user: 25543350
+PDB Files Directory: /home/25543350/autoencoder1/pdb_files/20240911_001045
+Results:
+  Total entries processed: 21932
+  PDB files downloaded: 21690
+  CIF files downloaded: 242
+  Failed downloads: 0
+  Process started at: Wed Sep 11 00:10:45 SAST 2024
+  Process ended at: Wed Sep 11 09:45:18 SAST 2024
+============================================================
+
+
+==================== Job Record ===========================
+Job Type: Data Collection
+Job ID: 230873.hpc2.hpc
+Job Name: data_collection
+Running on node(s): n08.hpc
+Queue: bix
+Submitted by user: 25543350
+PDB Files Directory: /home/25543350/autoencoder1/pdb_files/20240915_000205
+Results:
+  Total entries processed: 21932
+  PDB files downloaded: 21690
+  CIF files downloaded: 242
+  Failed downloads: 0
+  Process started at: Sun Sep 15 00:02:05 SAST 2024
+  Process ended at: Sun Sep 15 09:33:31 SAST 2024
+============================================================
+

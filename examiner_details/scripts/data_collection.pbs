@@ -1,0 +1,115 @@
+#!/bin/bash
+
+#PBS -N data_collection
+#PBS -l walltime=24:00:00
+#PBS -l ncpus=16
+#PBS -l mem=64GB
+#PBS -q bix
+#PBS -M 25543350@sun.ac.za
+#PBS -m abe
+#PBS -o /home/25543350/autoencoder1/scripts/unformatted_logs/
+#PBS -e /home/25543350/autoencoder1/scripts/unformatted_logs/
+
+timestamp=$(date +%Y%m%d_%H%M%S)
+LOG_DIR="/home/25543350/autoencoder1/logs/data_collection/${timestamp}"
+DOWNLOAD_DIR="/home/25543350/autoencoder1/pdb_files/${timestamp}"
+PISCES_TABLE="/home/25543350/autoencoder1/scripts/pisces_chain_list/cullpdb_pc90.0_res0.0-2.0_noBrks_len40-10000_R0.25_Xray_d2024_07_31_chains21932"
+PDB_BASE_URL="https://files.rcsb.org/download/"
+
+mkdir -p "$LOG_DIR"
+mkdir -p "$DOWNLOAD_DIR"
+
+CENTRAL_LOG="/home/25543350/autoencoder1/logs/data_collection/timestamps.log"
+start_time=$(date)
+CSV_FILE="${DOWNLOAD_DIR}/chain_list.csv"
+echo "Protein,Filename,Chain" > "$CSV_FILE"
+
+total_processed=0
+pdb_downloaded=0
+cif_downloaded=0
+failed_downloads=0
+
+exec > "${LOG_DIR}/data_collection.log" 2>&1
+
+trap '{
+    end_time=$(date)
+    echo -e "\n============================================================\n"
+    echo "Download and CSV generation process completed."
+    echo "Results:"
+    echo "  Total entries processed: $total_processed"
+    echo "  PDB files downloaded: $pdb_downloaded"
+    echo "  CIF files downloaded: $cif_downloaded"
+    echo "  Failed downloads: $failed_downloads"
+    echo "  PDB Files Directory: ${DOWNLOAD_DIR}"
+    echo "  Process started at: $start_time"
+    echo "  Process ended at: $end_time"
+    
+    {
+        echo -e "\n==================== Job Record ==========================="
+        echo "Job Type: Data Collection"
+        echo "Job ID: ${PBS_JOBID}"
+        echo "Job Name: ${PBS_JOBNAME}"
+        echo "Running on node(s): $(cat ${PBS_NODEFILE})"
+        echo "Queue: ${PBS_QUEUE}"
+        echo "Submitted by user: ${PBS_O_LOGNAME}"
+        echo "PDB Files Directory: ${DOWNLOAD_DIR}"
+        echo "Results:"
+        echo "  Total entries processed: $total_processed"
+        echo "  PDB files downloaded: $pdb_downloaded"
+        echo "  CIF files downloaded: $cif_downloaded"
+        echo "  Failed downloads: $failed_downloads"
+        echo "  Process started at: $start_time"
+        echo "  Process ended at: $end_time"
+        echo -e "============================================================\n"
+    } >> "$CENTRAL_LOG"
+}' EXIT
+
+echo -e "============================================================\n"
+echo "Data Collection Job"
+echo "Job ID: ${PBS_JOBID}"
+echo "Job Name: ${PBS_JOBNAME}"
+echo "Running on node(s): $(cat ${PBS_NODEFILE})"
+echo "Queue: ${PBS_QUEUE}"
+echo "Submitted by user: ${PBS_O_LOGNAME}"
+echo "PDB Files Directory: ${DOWNLOAD_DIR}"
+echo -e "============================================================\n"
+echo "Starting download of PDB files based on the PISCES list"
+
+while IFS= read -r line; do
+    if [[ "$line" == "PDBchain"* ]]; then
+        continue
+    fi
+
+    pdb_chain=$(echo "$line" | awk '{print $1}')
+    pdb_id=${pdb_chain:0:4}
+    chain=${pdb_chain:4:1}
+
+    pdb_file="${pdb_id}.pdb.gz"
+    cif_file="${pdb_id}.cif.gz"
+
+    echo -e "\nDownloading PDB file for: $pdb_id, Chain: $chain"
+    
+    wget -q -O "${DOWNLOAD_DIR}/${pdb_file}" "${PDB_BASE_URL}${pdb_id}.pdb.gz"
+
+    if [ -s "${DOWNLOAD_DIR}/${pdb_file}" ]; then
+        echo "$pdb_id PDB file downloaded successfully."
+        echo "$pdb_id,$pdb_file,$chain" >> "$CSV_FILE"
+        ((pdb_downloaded++))
+    else
+        echo "PDB file not found or empty. Attempting to download CIF file for: $pdb_id"
+        rm -f "${DOWNLOAD_DIR}/${pdb_file}"
+        wget -q -O "${DOWNLOAD_DIR}/${cif_file}" "${PDB_BASE_URL}${pdb_id}.cif.gz"
+
+        if [ -s "${DOWNLOAD_DIR}/${cif_file}" ]; then
+            echo "$pdb_id CIF file downloaded successfully and will NOT be added to chain list"
+            ((cif_downloaded++))
+        else
+            echo "Error downloading CIF file for $pdb_id." >&2
+            rm -f "${DOWNLOAD_DIR}/${cif_file}"
+            ((failed_downloads++))   
+        fi
+    fi
+
+    ((total_processed++))
+
+done < "$PISCES_TABLE"

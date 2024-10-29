@@ -1,0 +1,388 @@
+============================================================
+
+Autoencoder Training Job
+Job ID: 236610.hpc2.hpc
+Job Name: training
+Node(s): n08.hpc
+Queue: bix
+Submitted by: 25543350
+Training Output Directory: /home/25543350/autoencoder1/models/20241018_140620/training_results
+Feature Directory: /home/25543350/autoencoder1/features/20241011_163941
+
+============================================================
+
+Starting model training using train_model.py
+
+=== Chains ===
+
+Number of test chains: 2169
+
+Number of training chains: 19521
+
+Total Chains: 21690
+
+
+
+=== Dataset Sizes ===
+
+Original dataset size (unbalanced): 4523076
+
+Number of training residues: 3618460
+
+Number of validation residues: 904616
+
+Total residues: 4523076
+
+
+
+
+=== Model Architecture ===
+
+Autoencoder(
+  (encoder): Sequential(
+    (0): Linear(in_features=180, out_features=148, bias=True)
+    (1): BatchNorm1d(148, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (2): LeakyReLU(negative_slope=0.01)
+    (3): Dropout(p=0.01, inplace=False)
+    (4): Linear(in_features=148, out_features=116, bias=True)
+    (5): BatchNorm1d(116, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (6): LeakyReLU(negative_slope=0.01)
+    (7): Dropout(p=0.01, inplace=False)
+    (8): Linear(in_features=116, out_features=84, bias=True)
+  )
+  (decoder): Sequential(
+    (0): Linear(in_features=84, out_features=116, bias=True)
+    (1): BatchNorm1d(116, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (2): LeakyReLU(negative_slope=0.01)
+    (3): Dropout(p=0.01, inplace=False)
+    (4): Linear(in_features=116, out_features=148, bias=True)
+    (5): BatchNorm1d(148, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (6): LeakyReLU(negative_slope=0.01)
+    (7): Dropout(p=0.01, inplace=False)
+    (8): Linear(in_features=148, out_features=180, bias=True)
+  )
+)
+
+
+=== Model Parameters ===
+
+input_dim: 180
+
+Layers: [148, 116]
+
+Latent Dimension: 84
+
+Dropout Rate: 0.01
+
+Batch Size: 64
+
+Learning Rate: 0.001
+
+Epochs: 50
+
+Device: cuda
+
+Balanced Sampling: False
+
+Seed: 42
+
+Negative Slope: 0.01
+
+Save Validation Features: True
+
+Train-Validation Split: 0.8
+
+
+
+=== Optimizer ===
+
+Adam (
+Parameter Group 0
+    amsgrad: False
+    betas: (0.9, 0.999)
+    capturable: False
+    differentiable: False
+    eps: 1e-08
+    foreach: None
+    fused: None
+    lr: 0.001
+    maximize: False
+    weight_decay: 0
+)
+
+
+
+Starting training loop...
+
+Number of training residues: 3618460
+Number of validation residues: 904616
+
+Epoch 1/50
+
+Training Loss: 0.357322
+Validation Loss: 0.243914
+
+Epoch 2/50
+
+Training Loss: 0.287877
+Validation Loss: 0.213515
+
+Epoch 3/50
+
+Training Loss: 0.271946
+Validation Loss: 0.205711
+
+Epoch 4/50
+
+Training Loss: 0.263355
+Validation Loss: 0.199273
+
+Epoch 5/50
+
+Training Loss: 0.256917
+Validation Loss: 0.193011
+
+Epoch 6/50
+
+Training Loss: 0.251756
+Validation Loss: 0.190081
+
+Epoch 7/50
+
+Training Loss: 0.248954
+Validation Loss: 0.189713
+
+Epoch 8/50
+
+Training Loss: 0.247417
+Validation Loss: 0.189038
+
+Epoch 9/50
+
+Training Loss: 0.246165
+Validation Loss: 0.188285
+
+Epoch 10/50
+
+Training Loss: 0.245116
+Validation Loss: 0.187916
+
+Epoch 11/50
+
+Training Loss: 0.243657
+Validation Loss: 0.188513
+
+Epoch 12/50
+
+Training Loss: 0.242238
+Validation Loss: 0.184961
+
+Epoch 13/50
+
+Training Loss: 0.241675
+Validation Loss: 0.184805
+
+Epoch 14/50
+
+Training Loss: 0.241036
+Validation Loss: 0.184268
+
+Epoch 15/50
+
+Training Loss: 0.240695
+Validation Loss: 0.187254
+
+Epoch 16/50
+
+Training Loss: 0.240570
+Validation Loss: 0.184203
+
+Epoch 17/50
+
+Training Loss: 0.240283
+Validation Loss: 0.183911
+
+Epoch 18/50
+
+Training Loss: 0.239989
+Validation Loss: 0.184966
+
+Epoch 19/50
+
+Training Loss: 0.239669
+Validation Loss: 0.184601
+
+Epoch 20/50
+
+Training Loss: 0.239346
+Validation Loss: 0.183414
+
+Epoch 21/50
+
+Training Loss: 0.238828
+Validation Loss: 0.184049
+
+Epoch 22/50
+
+Training Loss: 0.238504
+Validation Loss: 0.184925
+
+Epoch 23/50
+
+Training Loss: 0.238138
+Validation Loss: 0.185172
+
+Epoch 24/50
+
+Training Loss: 0.237790
+Validation Loss: 0.184633
+
+Epoch 25/50
+
+Training Loss: 0.237779
+Validation Loss: 0.183079
+
+Epoch 26/50
+
+Training Loss: 0.237615
+Validation Loss: 0.183068
+
+Epoch 27/50
+
+Training Loss: 0.237414
+Validation Loss: 0.181813
+
+Epoch 28/50
+
+Training Loss: 0.237485
+Validation Loss: 0.186276
+
+Epoch 29/50
+
+Training Loss: 0.237679
+Validation Loss: 0.182655
+
+Epoch 30/50
+
+Training Loss: 0.237339
+Validation Loss: 0.182569
+
+Epoch 31/50
+
+Training Loss: 0.237101
+Validation Loss: 0.181715
+
+Epoch 32/50
+
+Training Loss: 0.237177
+Validation Loss: 0.182413
+
+Epoch 33/50
+
+Training Loss: 0.237058
+Validation Loss: 0.182278
+
+Epoch 34/50
+
+Training Loss: 0.236990
+Validation Loss: 0.183653
+
+Epoch 35/50
+
+Training Loss: 0.236818
+Validation Loss: 0.181970
+
+Epoch 36/50
+
+Training Loss: 0.236841
+Validation Loss: 0.182697
+
+Epoch 37/50
+
+Training Loss: 0.236614
+Validation Loss: 0.181050
+
+Epoch 38/50
+
+Training Loss: 0.236664
+Validation Loss: 0.181776
+
+Epoch 39/50
+
+Training Loss: 0.236667
+Validation Loss: 0.184057
+
+Epoch 40/50
+
+Training Loss: 0.236564
+Validation Loss: 0.181711
+
+Epoch 41/50
+
+Training Loss: 0.236372
+Validation Loss: 0.182780
+
+Epoch 42/50
+
+Training Loss: 0.236566
+Validation Loss: 0.181643
+
+Epoch 43/50
+
+Training Loss: 0.236318
+Validation Loss: 0.181504
+
+Epoch 44/50
+
+Training Loss: 0.236196
+Validation Loss: 0.182409
+
+Epoch 45/50
+
+Training Loss: 0.236163
+Validation Loss: 0.180609
+
+Epoch 46/50
+
+Training Loss: 0.236193
+Validation Loss: 0.181846
+
+Epoch 47/50
+
+Training Loss: 0.235955
+Validation Loss: 0.181974
+
+Epoch 48/50
+
+Training Loss: 0.235991
+Validation Loss: 0.183586
+
+Epoch 49/50
+
+Training Loss: 0.235749
+Validation Loss: 0.181832
+
+Epoch 50/50
+
+Training Loss: 0.235737
+Validation Loss: 0.180378
+
+Training loop completed.
+
+Model saved to /home/25543350/autoencoder1/models/20241018_140620/training_results/trained_model.pth
+
+Generating plots and reports...
+
+/home/25543350/anaconda3/envs/autoencoder/lib/python3.12/site-packages/umap/umap_.py:1945: UserWarning: n_jobs value 1 overridden to 1 by setting random_state. Use no seed for parallelism.
+  warn(f"n_jobs value {self.n_jobs} overridden to 1 by setting random_state. Use no seed for parallelism.")
+
+============================================================
+
+Training Completed
+Results:
+  Training Output Directory: /home/25543350/autoencoder1/models/20241018_140620/training_results
+  Inference Output Directory: /home/25543350/autoencoder1/models/20241018_140620/test_inference_results
+  SeqPredNN Inference (Original Features): /home/25543350/autoencoder1/models/20241018_140620/original_seqprednn_results
+  SeqPredNN Inference (Recontructed Features): /home/25543350/autoencoder1/models/20241018_140620/reconstructed_seqprednn_results
+  Process started at: Fri Oct 18 14:06:20 SAST 2024
+  Process ended at: Fri Oct 18 18:08:23 SAST 2024
