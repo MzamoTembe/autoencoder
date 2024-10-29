@@ -1,0 +1,480 @@
+
+==================== Job Record ===========================
+Job Type: Autoencoder Training and Inference
+Job ID: 235033.hpc2.hpc
+Job Name: training
+Node(s): n05.hpc
+Queue: bix
+Submitted by: 25543350
+Training Output Directory: /home/25543350/autoencoder1/models/20241011_225722/training_results
+Inference Output Directory: /home/25543350/autoencoder1/models/20241011_225722/test_inference_results
+SeqPredNN Inference (Original Features): /home/25543350/autoencoder1/models/20241011_225722/original_seqprednn_results
+SeqPredNN Inference (Recontructed Features): /home/25543350/autoencoder1/models/20241011_225722/reconstructed_seqprednn_results
+Process started at: Fri Oct 11 22:57:22 SAST 2024
+Process ended at: Sat Oct 12 05:30:53 SAST 2024
+============================================================
+
+==================== Job Record ===========================
+Job Type: Autoencoder Training and Inference
+Job ID: 235066.hpc2.hpc
+Job Name: training
+Node(s): n05.hpc
+Queue: bix
+Submitted by: 25543350
+Training Output Directory: /home/25543350/autoencoder1/models/20241012_220851/training_results
+Inference Output Directory: /home/25543350/autoencoder1/models/20241012_220851/test_inference_results
+SeqPredNN Inference (Original Features): /home/25543350/autoencoder1/models/20241012_220851/original_seqprednn_results
+SeqPredNN Inference (Recontructed Features): /home/25543350/autoencoder1/models/20241012_220851/reconstructed_seqprednn_results
+Process started at: Sat Oct 12 22:08:51 SAST 2024
+Process ended at: Sun Oct 13 03:16:44 SAST 2024
+============================================================
+
+==================== Job Record ===========================
+Job Type: Autoencoder Training and Inference
+Job ID: 235088.hpc2.hpc
+Job Name: training
+Node(s): n08.hpc
+Queue: bix
+Submitted by: 25543350
+Training Output Directory: /home/25543350/autoencoder1/models/20241013_202719/training_results
+Inference Output Directory: /home/25543350/autoencoder1/models/20241013_202719/test_inference_results
+SeqPredNN Inference (Original Features): /home/25543350/autoencoder1/models/20241013_202719/original_seqprednn_results
+SeqPredNN Inference (Recontructed Features): /home/25543350/autoencoder1/models/20241013_202719/reconstructed_seqprednn_results
+Process started at: Sun Oct 13 20:27:19 SAST 2024
+Process ended at: Sun Oct 13 23:41:50 SAST 2024
+============================================================
+
+==================== Job Record ===========================
+Job Type: Autoencoder Training and Inference
+Job ID: 235096.hpc2.hpc
+Job Name: training
+Node(s): n03.hpc
+Queue: bix
+Submitted by: 25543350
+Training Output Directory: /home/25543350/autoencoder1/models/20241014_012136/training_results
+Inference Output Directory: /home/25543350/autoencoder1/models/20241014_012136/test_inference_results
+SeqPredNN Inference (Original Features): /home/25543350/autoencoder1/models/20241014_012136/original_seqprednn_results
+SeqPredNN Inference (Recontructed Features): /home/25543350/autoencoder1/models/20241014_012136/reconstructed_seqprednn_results
+Process started at: Mon Oct 14 01:21:36 SAST 2024
+Process ended at: Mon Oct 14 09:17:30 SAST 2024
+============================================================
+
+==================== Job Record ===========================
+Job Type: Autoencoder Training and Inference
+Job ID: 235193.hpc2.hpc
+Job Name: training
+Node(s): n11.hpc
+Queue: bix
+Submitted by: 25543350
+Training Output Directory: /home/25543350/autoencoder1/models/20241014_151039/training_results
+Inference Output Directory: /home/25543350/autoencoder1/models/20241014_151039/test_inference_results
+SeqPredNN Inference (Original Features): /home/25543350/autoencoder1/models/20241014_151039/original_seqprednn_results
+SeqPredNN Inference (Recontructed Features): /home/25543350/autoencoder1/models/20241014_151039/reconstructed_seqprednn_results
+Process started at: Mon Oct 14 15:10:39 SAST 2024
+Process ended at: Mon Oct 14 23:43:18 SAST 2024
+============================================================
+
+==================== Job Record ===========================
+Job Type: Autoencoder Training and Inference
+Job ID: 235836.hpc2.hpc
+Job Name: training
+Node(s): n12.hpc
+Queue: bix
+Submitted by: 25543350
+Training Output Directory: /home/25543350/autoencoder1/models/20241015_184242/training_results
+Inference Output Directory: /home/25543350/autoencoder1/models/20241015_184242/test_inference_results
+SeqPredNN Inference (Original Features): /home/25543350/autoencoder1/models/20241015_184242/original_seqprednn_results
+SeqPredNN Inference (Recontructed Features): /home/25543350/autoencoder1/models/20241015_184242/reconstructed_seqprednn_results
+Process started at: Tue Oct 15 18:42:42 SAST 2024
+Process ended at: Tue Oct 15 20:55:28 SAST 2024
+============================================================
+
+==================== Job Record ===========================
+Job Type: Autoencoder Training and Inference
+Job ID: 235860.hpc2.hpc
+Job Name: training
+Node(s): n06.hpc
+Queue: bix
+Submitted by: 25543350
+Training Output Directory: /home/25543350/autoencoder1/models/20241015_213039/training_results
+Inference Output Directory: /home/25543350/autoencoder1/models/20241015_213039/test_inference_results
+SeqPredNN Inference (Original Features): /home/25543350/autoencoder1/models/20241015_213039/original_seqprednn_results
+SeqPredNN Inference (Recontructed Features): /home/25543350/autoencoder1/models/20241015_213039/reconstructed_seqprednn_results
+Process started at: Tue Oct 15 21:30:39 SAST 2024
+Process ended at: Tue Oct 15 23:25:38 SAST 2024
+============================================================
+
+==================== Job Record ===========================
+Job Type: Autoencoder Training and Inference
+Job ID: 235859.hpc2.hpc
+Job Name: training
+Node(s): n05.hpc
+Queue: bix
+Submitted by: 25543350
+Training Output Directory: /home/25543350/autoencoder1/models/20241015_210935/training_results
+Inference Output Directory: /home/25543350/autoencoder1/models/20241015_210935/test_inference_results
+SeqPredNN Inference (Original Features): /home/25543350/autoencoder1/models/20241015_210935/original_seqprednn_results
+SeqPredNN Inference (Recontructed Features): /home/25543350/autoencoder1/models/20241015_210935/reconstructed_seqprednn_results
+Process started at: Tue Oct 15 21:09:35 SAST 2024
+Process ended at: Tue Oct 15 23:30:41 SAST 2024
+============================================================
+
+==================== Job Record ===========================
+Job Type: Autoencoder Training and Inference
+Job ID: 235891.hpc2.hpc
+Job Name: training
+Node(s): n05.hpc
+Queue: bix
+Submitted by: 25543350
+Training Output Directory: /home/25543350/autoencoder1/models/20241016_002431/training_results
+Inference Output Directory: /home/25543350/autoencoder1/models/20241016_002431/test_inference_results
+SeqPredNN Inference (Original Features): /home/25543350/autoencoder1/models/20241016_002431/original_seqprednn_results
+SeqPredNN Inference (Recontructed Features): /home/25543350/autoencoder1/models/20241016_002431/reconstructed_seqprednn_results
+Process started at: Wed Oct 16 00:24:31 SAST 2024
+Process ended at: Wed Oct 16 03:18:45 SAST 2024
+============================================================
+
+==================== Job Record ===========================
+Job Type: Autoencoder Training and Inference
+Job ID: 235892.hpc2.hpc
+Job Name: training
+Node(s): n03.hpc
+Queue: bix
+Submitted by: 25543350
+Training Output Directory: /home/25543350/autoencoder1/models/20241016_002052/training_results
+Inference Output Directory: /home/25543350/autoencoder1/models/20241016_002052/test_inference_results
+SeqPredNN Inference (Original Features): /home/25543350/autoencoder1/models/20241016_002052/original_seqprednn_results
+SeqPredNN Inference (Recontructed Features): /home/25543350/autoencoder1/models/20241016_002052/reconstructed_seqprednn_results
+Process started at: Wed Oct 16 00:20:52 SAST 2024
+Process ended at: Wed Oct 16 03:40:37 SAST 2024
+============================================================
+
+==================== Job Record ===========================
+Job Type: Autoencoder Training and Inference
+Job ID: 236154.hpc2.hpc
+Job Name: training
+Node(s): n06.hpc
+Queue: bix
+Submitted by: 25543350
+Training Output Directory: /home/25543350/autoencoder1/models/20241016_185005/training_results
+Inference Output Directory: /home/25543350/autoencoder1/models/20241016_185005/test_inference_results
+SeqPredNN Inference (Original Features): /home/25543350/autoencoder1/models/20241016_185005/original_seqprednn_results
+SeqPredNN Inference (Recontructed Features): /home/25543350/autoencoder1/models/20241016_185005/reconstructed_seqprednn_results
+Process started at: Wed Oct 16 18:50:05 SAST 2024
+Process ended at: Wed Oct 16 21:12:20 SAST 2024
+============================================================
+
+==================== Job Record ===========================
+Job Type: Autoencoder Training and Inference
+Job ID: 236155.hpc2.hpc
+Job Name: training
+Node(s): n11.hpc
+Queue: bix
+Submitted by: 25543350
+Training Output Directory: /home/25543350/autoencoder1/models/20241016_183522/training_results
+Inference Output Directory: /home/25543350/autoencoder1/models/20241016_183522/test_inference_results
+SeqPredNN Inference (Original Features): /home/25543350/autoencoder1/models/20241016_183522/original_seqprednn_results
+SeqPredNN Inference (Recontructed Features): /home/25543350/autoencoder1/models/20241016_183522/reconstructed_seqprednn_results
+Process started at: Wed Oct 16 18:35:22 SAST 2024
+Process ended at: Wed Oct 16 22:08:16 SAST 2024
+============================================================
+
+==================== Job Record ===========================
+Job Type: Autoencoder Training and Inference
+Job ID: 236191.hpc2.hpc
+Job Name: training
+Node(s): n05.hpc
+Queue: bix
+Submitted by: 25543350
+Training Output Directory: /home/25543350/autoencoder1/models/20241017_014859/training_results
+Inference Output Directory: /home/25543350/autoencoder1/models/20241017_014859/test_inference_results
+SeqPredNN Inference (Original Features): /home/25543350/autoencoder1/models/20241017_014859/original_seqprednn_results
+SeqPredNN Inference (Recontructed Features): /home/25543350/autoencoder1/models/20241017_014859/reconstructed_seqprednn_results
+Process started at: Thu Oct 17 01:48:59 SAST 2024
+Process ended at: Thu Oct 17 04:59:37 SAST 2024
+============================================================
+
+==================== Job Record ===========================
+Job Type: Autoencoder Training and Inference
+Job ID: 236192.hpc2.hpc
+Job Name: training
+Node(s): n03.hpc
+Queue: bix
+Submitted by: 25543350
+Training Output Directory: /home/25543350/autoencoder1/models/20241017_014550/training_results
+Inference Output Directory: /home/25543350/autoencoder1/models/20241017_014550/test_inference_results
+SeqPredNN Inference (Original Features): /home/25543350/autoencoder1/models/20241017_014550/original_seqprednn_results
+SeqPredNN Inference (Recontructed Features): /home/25543350/autoencoder1/models/20241017_014550/reconstructed_seqprednn_results
+Process started at: Thu Oct 17 01:45:50 SAST 2024
+Process ended at: Thu Oct 17 05:00:08 SAST 2024
+============================================================
+
+==================== Job Record ===========================
+Job Type: Autoencoder Training and Inference
+Job ID: 236486.hpc2.hpc
+Job Name: training
+Node(s): n05.hpc
+Queue: bix
+Submitted by: 25543350
+Training Output Directory: /home/25543350/autoencoder1/models/20241018_040843/training_results
+Inference Output Directory: /home/25543350/autoencoder1/models/20241018_040843/test_inference_results
+SeqPredNN Inference (Original Features): /home/25543350/autoencoder1/models/20241018_040843/original_seqprednn_results
+SeqPredNN Inference (Recontructed Features): /home/25543350/autoencoder1/models/20241018_040843/reconstructed_seqprednn_results
+Process started at: Fri Oct 18 04:08:43 SAST 2024
+Process ended at: Fri Oct 18 07:42:59 SAST 2024
+============================================================
+
+==================== Job Record ===========================
+Job Type: Autoencoder Training and Inference
+Job ID: 236487.hpc2.hpc
+Job Name: training
+Node(s): n03.hpc
+Queue: bix
+Submitted by: 25543350
+Training Output Directory: /home/25543350/autoencoder1/models/20241018_040545/training_results
+Inference Output Directory: /home/25543350/autoencoder1/models/20241018_040545/test_inference_results
+SeqPredNN Inference (Original Features): /home/25543350/autoencoder1/models/20241018_040545/original_seqprednn_results
+SeqPredNN Inference (Recontructed Features): /home/25543350/autoencoder1/models/20241018_040545/reconstructed_seqprednn_results
+Process started at: Fri Oct 18 04:05:45 SAST 2024
+Process ended at: Fri Oct 18 09:11:50 SAST 2024
+============================================================
+
+==================== Job Record ===========================
+Job Type: Autoencoder Training and Inference
+Job ID: 236604.hpc2.hpc
+Job Name: training
+Node(s): n05.hpc
+Queue: bix
+Submitted by: 25543350
+Training Output Directory: /home/25543350/autoencoder1/models/20241018_124138/training_results
+Inference Output Directory: /home/25543350/autoencoder1/models/20241018_124138/test_inference_results
+SeqPredNN Inference (Original Features): /home/25543350/autoencoder1/models/20241018_124138/original_seqprednn_results
+SeqPredNN Inference (Recontructed Features): /home/25543350/autoencoder1/models/20241018_124138/reconstructed_seqprednn_results
+Process started at: Fri Oct 18 12:41:38 SAST 2024
+Process ended at: Fri Oct 18 12:44:29 SAST 2024
+============================================================
+
+==================== Job Record ===========================
+Job Type: Autoencoder Training and Inference
+Job ID: 236609.hpc2.hpc
+Job Name: training
+Node(s): n03.hpc
+Queue: bix
+Submitted by: 25543350
+Training Output Directory: /home/25543350/autoencoder1/models/20241018_131638/training_results
+Inference Output Directory: /home/25543350/autoencoder1/models/20241018_131638/test_inference_results
+SeqPredNN Inference (Original Features): /home/25543350/autoencoder1/models/20241018_131638/original_seqprednn_results
+SeqPredNN Inference (Recontructed Features): /home/25543350/autoencoder1/models/20241018_131638/reconstructed_seqprednn_results
+Process started at: Fri Oct 18 13:16:38 SAST 2024
+Process ended at: Fri Oct 18 18:09:45 SAST 2024
+============================================================
+
+==================== Job Record ===========================
+Job Type: Autoencoder Training and Inference
+Job ID: 236610.hpc2.hpc
+Job Name: training
+Node(s): n08.hpc
+Queue: bix
+Submitted by: 25543350
+Training Output Directory: /home/25543350/autoencoder1/models/20241018_140620/training_results
+Inference Output Directory: /home/25543350/autoencoder1/models/20241018_140620/test_inference_results
+SeqPredNN Inference (Original Features): /home/25543350/autoencoder1/models/20241018_140620/original_seqprednn_results
+SeqPredNN Inference (Recontructed Features): /home/25543350/autoencoder1/models/20241018_140620/reconstructed_seqprednn_results
+Process started at: Fri Oct 18 14:06:20 SAST 2024
+Process ended at: Fri Oct 18 18:08:23 SAST 2024
+============================================================
+
+==================== Job Record ===========================
+Job Type: Autoencoder Training and Inference
+Job ID: 236606.hpc2.hpc
+Job Name: training
+Node(s): n05.hpc
+Queue: bix
+Submitted by: 25543350
+Training Output Directory: /home/25543350/autoencoder1/models/20241018_124954/training_results
+Inference Output Directory: /home/25543350/autoencoder1/models/20241018_124954/test_inference_results
+SeqPredNN Inference (Original Features): /home/25543350/autoencoder1/models/20241018_124954/original_seqprednn_results
+SeqPredNN Inference (Recontructed Features): /home/25543350/autoencoder1/models/20241018_124954/reconstructed_seqprednn_results
+Process started at: Fri Oct 18 12:49:54 SAST 2024
+Process ended at: Fri Oct 18 18:20:25 SAST 2024
+============================================================
+
+==================== Job Record ===========================
+Job Type: Autoencoder Training and Inference
+Job ID: 236746.hpc2.hpc
+Job Name: training
+Node(s): n08.hpc
+Queue: bix
+Submitted by: 25543350
+Training Output Directory: /home/25543350/autoencoder1/models/20241018_210521/training_results
+Inference Output Directory: /home/25543350/autoencoder1/models/20241018_210521/test_inference_results
+SeqPredNN Inference (Original Features): /home/25543350/autoencoder1/models/20241018_210521/original_seqprednn_results
+SeqPredNN Inference (Recontructed Features): /home/25543350/autoencoder1/models/20241018_210521/reconstructed_seqprednn_results
+Process started at: Fri Oct 18 21:05:21 SAST 2024
+Process ended at: Sat Oct 19 01:19:33 SAST 2024
+============================================================
+
+==================== Job Record ===========================
+Job Type: Autoencoder Training and Inference
+Job ID: 236747.hpc2.hpc
+Job Name: training
+Node(s): n08.hpc
+Queue: bix
+Submitted by: 25543350
+Training Output Directory: /home/25543350/autoencoder1/models/20241018_211348/training_results
+Inference Output Directory: /home/25543350/autoencoder1/models/20241018_211348/test_inference_results
+SeqPredNN Inference (Original Features): /home/25543350/autoencoder1/models/20241018_211348/original_seqprednn_results
+SeqPredNN Inference (Recontructed Features): /home/25543350/autoencoder1/models/20241018_211348/reconstructed_seqprednn_results
+Process started at: Fri Oct 18 21:13:48 SAST 2024
+Process ended at: Sat Oct 19 01:21:50 SAST 2024
+============================================================
+
+==================== Job Record ===========================
+Job Type: Autoencoder Training and Inference
+Job ID: 236751.hpc2.hpc
+Job Name: training
+Node(s): n11.hpc
+Queue: bix
+Submitted by: 25543350
+Training Output Directory: /home/25543350/autoencoder1/models/20241018_213725/training_results
+Inference Output Directory: /home/25543350/autoencoder1/models/20241018_213725/test_inference_results
+SeqPredNN Inference (Original Features): /home/25543350/autoencoder1/models/20241018_213725/original_seqprednn_results
+SeqPredNN Inference (Recontructed Features): /home/25543350/autoencoder1/models/20241018_213725/reconstructed_seqprednn_results
+Process started at: Fri Oct 18 21:37:25 SAST 2024
+Process ended at: Sat Oct 19 07:27:42 SAST 2024
+============================================================
+
+==================== Job Record ===========================
+Job Type: Autoencoder Training and Inference
+Job ID: 236749.hpc2.hpc
+Job Name: training
+Node(s): n05.hpc
+Queue: bix
+Submitted by: 25543350
+Training Output Directory: /home/25543350/autoencoder1/models/20241018_213644/training_results
+Inference Output Directory: /home/25543350/autoencoder1/models/20241018_213644/test_inference_results
+SeqPredNN Inference (Original Features): /home/25543350/autoencoder1/models/20241018_213644/original_seqprednn_results
+SeqPredNN Inference (Recontructed Features): /home/25543350/autoencoder1/models/20241018_213644/reconstructed_seqprednn_results
+Process started at: Fri Oct 18 21:36:44 SAST 2024
+Process ended at: Sat Oct 19 09:58:17 SAST 2024
+============================================================
+
+==================== Job Record ===========================
+Job Type: Autoencoder Training and Inference
+Job ID: 236776.hpc2.hpc
+Job Name: training
+Node(s): n08.hpc
+Queue: bix
+Submitted by: 25543350
+Training Output Directory: /home/25543350/autoencoder1/models/20241019_104648/training_results
+Inference Output Directory: /home/25543350/autoencoder1/models/20241019_104648/test_inference_results
+SeqPredNN Inference (Original Features): /home/25543350/autoencoder1/models/20241019_104648/original_seqprednn_results
+SeqPredNN Inference (Recontructed Features): /home/25543350/autoencoder1/models/20241019_104648/reconstructed_seqprednn_results
+Process started at: Sat Oct 19 10:46:48 SAST 2024
+Process ended at: Sat Oct 19 13:27:41 SAST 2024
+============================================================
+
+==================== Job Record ===========================
+Job Type: Autoencoder Training and Inference
+Job ID: 236778.hpc2.hpc
+Job Name: training
+Node(s): n08.hpc
+Queue: bix
+Submitted by: 25543350
+Training Output Directory: /home/25543350/autoencoder1/models/20241019_104828/training_results
+Inference Output Directory: /home/25543350/autoencoder1/models/20241019_104828/test_inference_results
+SeqPredNN Inference (Original Features): /home/25543350/autoencoder1/models/20241019_104828/original_seqprednn_results
+SeqPredNN Inference (Recontructed Features): /home/25543350/autoencoder1/models/20241019_104828/reconstructed_seqprednn_results
+Process started at: Sat Oct 19 10:48:28 SAST 2024
+Process ended at: Sat Oct 19 13:30:10 SAST 2024
+============================================================
+
+==================== Job Record ===========================
+Job Type: Autoencoder Training and Inference
+Job ID: 236777.hpc2.hpc
+Job Name: training
+Node(s): n08.hpc
+Queue: bix
+Submitted by: 25543350
+Training Output Directory: /home/25543350/autoencoder1/models/20241019_104718/training_results
+Inference Output Directory: /home/25543350/autoencoder1/models/20241019_104718/test_inference_results
+SeqPredNN Inference (Original Features): /home/25543350/autoencoder1/models/20241019_104718/original_seqprednn_results
+SeqPredNN Inference (Recontructed Features): /home/25543350/autoencoder1/models/20241019_104718/reconstructed_seqprednn_results
+Process started at: Sat Oct 19 10:47:18 SAST 2024
+Process ended at: Sat Oct 19 13:31:35 SAST 2024
+============================================================
+
+==================== Job Record ===========================
+Job Type: Autoencoder Training and Inference
+Job ID: 236775.hpc2.hpc
+Job Name: training
+Node(s): n03.hpc
+Queue: bix
+Submitted by: 25543350
+Training Output Directory: /home/25543350/autoencoder1/models/20241019_105309/training_results
+Inference Output Directory: /home/25543350/autoencoder1/models/20241019_105309/test_inference_results
+SeqPredNN Inference (Original Features): /home/25543350/autoencoder1/models/20241019_105309/original_seqprednn_results
+SeqPredNN Inference (Recontructed Features): /home/25543350/autoencoder1/models/20241019_105309/reconstructed_seqprednn_results
+Process started at: Sat Oct 19 10:53:09 SAST 2024
+Process ended at: Sat Oct 19 13:43:24 SAST 2024
+============================================================
+
+==================== Job Record ===========================
+Job Type: Autoencoder Training and Inference
+Job ID: 236774.hpc2.hpc
+Job Name: training
+Node(s): n05.hpc
+Queue: bix
+Submitted by: 25543350
+Training Output Directory: /home/25543350/autoencoder1/models/20241019_105721/training_results
+Inference Output Directory: /home/25543350/autoencoder1/models/20241019_105721/test_inference_results
+SeqPredNN Inference (Original Features): /home/25543350/autoencoder1/models/20241019_105721/original_seqprednn_results
+SeqPredNN Inference (Recontructed Features): /home/25543350/autoencoder1/models/20241019_105721/reconstructed_seqprednn_results
+Process started at: Sat Oct 19 10:57:21 SAST 2024
+Process ended at: Sat Oct 19 14:25:52 SAST 2024
+============================================================
+
+==================== Job Record ===========================
+Job Type: Autoencoder Training and Inference
+Job ID: 236779.hpc2.hpc
+Job Name: training
+Node(s): n11.hpc
+Queue: bix
+Submitted by: 25543350
+Training Output Directory: /home/25543350/autoencoder1/models/20241019_110004/training_results
+Inference Output Directory: /home/25543350/autoencoder1/models/20241019_110004/test_inference_results
+SeqPredNN Inference (Original Features): /home/25543350/autoencoder1/models/20241019_110004/original_seqprednn_results
+SeqPredNN Inference (Recontructed Features): /home/25543350/autoencoder1/models/20241019_110004/reconstructed_seqprednn_results
+Process started at: Sat Oct 19 11:00:04 SAST 2024
+Process ended at: Sat Oct 19 15:38:26 SAST 2024
+============================================================
+
+==================== Job Record ===========================
+Job Type: Autoencoder Training and Inference
+Job ID: 236748.hpc2.hpc
+Job Name: training
+Node(s): n12.hpc
+Queue: bix
+Submitted by: 25543350
+Training Output Directory: /home/25543350/autoencoder1/models/20241018_213405/training_results
+Inference Output Directory: /home/25543350/autoencoder1/models/20241018_213405/test_inference_results
+SeqPredNN Inference (Original Features): /home/25543350/autoencoder1/models/20241018_213405/original_seqprednn_results
+SeqPredNN Inference (Recontructed Features): /home/25543350/autoencoder1/models/20241018_213405/reconstructed_seqprednn_results
+Process started at: Fri Oct 18 21:34:05 SAST 2024
+Process ended at: Sat Oct 19 17:27:04 SAST 2024
+============================================================
+
+==================== Job Record ===========================
+Job Type: Autoencoder Training and Inference
+Job ID: 236752.hpc2.hpc
+Job Name: training
+Node(s): n12.hpc
+Queue: bix
+Submitted by: 25543350
+Training Output Directory: /home/25543350/autoencoder1/models/20241018_221955/training_results
+Inference Output Directory: /home/25543350/autoencoder1/models/20241018_221955/test_inference_results
+SeqPredNN Inference (Original Features): /home/25543350/autoencoder1/models/20241018_221955/original_seqprednn_results
+SeqPredNN Inference (Recontructed Features): /home/25543350/autoencoder1/models/20241018_221955/reconstructed_seqprednn_results
+Process started at: Fri Oct 18 22:19:55 SAST 2024
+Process ended at: Sat Oct 19 21:05:57 SAST 2024
+============================================================
