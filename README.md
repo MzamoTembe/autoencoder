@@ -59,18 +59,12 @@ The `pretrained_model` directory includes:
 - Feature chain list for training ([`chain_list_training.txt`](pretrained_model/chain_list_training.txt))
 - Feature chain list for testing ([`chain_list_testing.txt`](pretrained_model/chain_list_testing.txt))
 
-## Examiner Details
-
-The `examiner_details` directory includes:
-- All scripts run on the HPC ([`scripts/`](examiner_details/scripts))
-- Logs generated during training ([`logs/`](examiner_details/logs))
-
 ## License
 
 This software and code is distributed under [MIT License](LICENSE)
 
 ## Citation
 
-Tembe, M. Common local protein structural motifs supported by specific amino acids. Report [link](https://docs.google.com/document/d/1P0-RoaRTZxS-yPdZcdrNeWGD_X1I_7Ir/edit?usp=drive_link&ouid=107271459588602317511&rtpof=true&sd=true) (2024).
+Common local protein structural motifs supported by specific amino acids. Report [link](https://docs.google.com/document/d/1P0-RoaRTZxS-yPdZcdrNeWGD_X1I_7Ir/edit?usp=drive_link&ouid=107271459588602317511&rtpof=true&sd=true) (2024).
 
 Lategan, F.A., Schreiber, C. & Patterton, H.G. SeqPredNN: a neural network that generates protein sequences that fold into specified tertiary structures. BMC Bioinformatics 24, 373 (2023). https://doi.org/10.1186/s12859-023-05498-4
